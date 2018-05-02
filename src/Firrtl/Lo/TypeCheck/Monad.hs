@@ -22,10 +22,12 @@ data Error
   | ExpectedParameter Type
   | Mismatch Type Type
   | NotInScope Id (Maybe Type)
+  | NoTopModule Id
   | ParameterToBig N.Natural Type
   | Connectable ConnType ConnType
   | Containable ConnType ConnType
   | Equivalent ConnType ConnType
+  deriving Show
 
 newtype Context = Ctx { unCtx :: HashMap Id ConnType }
 

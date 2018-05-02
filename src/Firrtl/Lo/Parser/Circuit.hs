@@ -121,5 +121,5 @@ port = do
   pure $ Port name (gender ty)
 
 direction :: (Monad m, TokenParsing m) => m (Type -> ConnType)
-direction = reserved "input" $> female
-        <|> reserved "output" $> male
+direction = reserved "input"  $> male
+        <|> reserved "output" $> female

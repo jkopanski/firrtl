@@ -5,7 +5,6 @@ import           Data.Text.Lazy.IO   (readFile)
 import           Options.Applicative (execParser)
 import qualified Firrtl.Lo.Parser    as Parser
 import qualified Firrtl.Lo.TypeCheck as Check
-import qualified Firrtl.Lo.Syntax    as Syntax
 import qualified Text.Megaparsec
 
 import Args (file, options)
@@ -19,4 +18,8 @@ main = do
     Left e -> fail $ Text.Megaparsec.parseErrorPretty' text e
     Right ast -> pure ast
 
-  pure ()
+  case Check.check ast of
+    Right _  -> pure ()
+    Left err -> fail $ show err
+
+  putStrLn "Ok!"

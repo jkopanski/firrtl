@@ -22,3 +22,7 @@ data Module
 data Port = Port Id       -- port name
                  ConnType -- port gender
   deriving (Eq, Show)
+
+moduleName :: Module -> Id
+moduleName (Module name _ _) = name
+moduleName (ExtModule name _) = name
