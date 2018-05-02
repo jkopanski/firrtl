@@ -41,26 +41,26 @@ jobs:
       - run:
           command: stack test
 
-  haddock:
-    docker:
-      - image: fpco/stack-build:lts
-    steps:
-      - checkout
-      - restore_cache:
-          keys:
-            - stack-dependencies-{{ arch }}-{{ checksum "stack.yaml" }}-{{ checksum "package.yaml" }}
-- stack-dependencies-{{ arch }}-{{ checksum "stack.yaml" }}
-     - restore_cache:
-          key: stack-work-{{ arch }}-{{ .Revision }}
-      - run:
-          command: stack haddock --no-haddock-deps
-      - run:
-          name: Move haddock files to a temporary directory
-          command: |
-            mkdir -p /tmp/haddock
-            mv $(stack path --local-install-root)/doc /tmp/haddock
-      - store_artifacts:
-          path: /tmp/haddock
+#   haddock:
+#     docker:
+#       - image: fpco/stack-build:lts
+#     steps:
+#       - checkout
+#       - restore_cache:
+#           keys:
+#             - stack-dependencies-{{ arch }}-{{ checksum "stack.yaml" }}-{{ checksum "package.yaml" }}
+# - stack-dependencies-{{ arch }}-{{ checksum "stack.yaml" }}
+#      - restore_cache:
+#           key: stack-work-{{ arch }}-{{ .Revision }}
+#       - run:
+#           command: stack haddock --no-haddock-deps
+#       - run:
+#           name: Move haddock files to a temporary directory
+#           command: |
+#             mkdir -p /tmp/haddock
+#             mv $(stack path --local-install-root)/doc /tmp/haddock
+#       - store_artifacts:
+#           path: /tmp/haddock
 
 workflows:
   version: 2
