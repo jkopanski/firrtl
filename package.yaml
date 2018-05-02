@@ -1,0 +1,78 @@
+name:                firrtl
+version:             0.0.0.1
+synopsis:            FIRRTL haskell implementation.
+description: >
+  @FIRRTL@ goal is to be the same as LLVM IR to digital hardware.
+license:             BSD3
+homepage:            null
+git:                 keybase://team/quivade/screwdriver
+author:
+  - Jakub Kopański <jkopanski@protonmail.com>
+  - Przemysław Kopański <pkopanski@protonmail.com>
+maintainer:
+  - Jakub Kopański <jkopanski@protonmail.com>
+copyright:           Copyright (c) 2018 Jakub Kopański
+category:            Hardware
+extra-source-files:
+- README.md
+
+default-extensions:
+  - ApplicativeDo
+  - DeriveFunctor
+  - DeriveTraversable
+  - FlexibleContexts
+  - GADTs
+  - GeneralizedNewtypeDeriving
+  - KindSignatures
+  - LambdaCase
+  - MultiParamTypeClasses
+  - OverloadedStrings
+  - RankNTypes
+  - StandaloneDeriving
+  - TypeFamilies
+
+ghc-options:         -Wall
+
+dependencies:
+  - base >= 4.9 && < 10
+  - formatting
+  - megaparsec
+  - monads-tf
+  - parsers
+  - prettyprinter
+  - prettyprinter-ansi-terminal
+  - recursion-schemes
+  - text
+  - transformers
+  - unordered-containers
+  
+library:
+  source-dirs:        src
+  #dependencies: 
+
+executables:
+  rtl:
+    main:             Main.hs
+    source-dirs:      rtl
+    dependencies:
+      - firrtl
+      - optparse-applicative
+    ghc-options:
+      -Wall
+      -rtsopts
+      -threaded
+
+tests:
+  test:
+    main:             Tests.hs
+    source-dirs:
+      - src
+      - tests
+
+    dependencies:
+      - hspec
+      - hspec-megaparsec
+      - firrtl
+      - tasty
+      - tasty-hspec
+      - tasty-hunit
