@@ -34,7 +34,7 @@ default-extensions:
 ghc-options:         -Wall
 
 dependencies:
-  - base >= 4.9 && < 10
+  - base >= 4.11 && < 10
   - formatting
   - megaparsec
   - monads-tf
@@ -42,6 +42,7 @@ dependencies:
   - prettyprinter
   - prettyprinter-ansi-terminal
   - recursion-schemes
+  - singletons >= 2.4
   - text
   - transformers
   - unordered-containers
