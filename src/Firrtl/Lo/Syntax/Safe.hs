@@ -7,16 +7,23 @@ that will allow to create only valid
 
 This will be the output of the typechecking phase.
 Ready to compile/interpret whatever.
+
+Basically combination of articles:
+http://www.timphilipwilliams.com/posts/2013-01-16-fixing-gadts.html
+https://blog.jle.im/entry/fixed-length-vector-types-in-haskell.html
+https://blog.jle.im/entry/introduction-to-singletons-1.html
 |-}
 {-# language
         DataKinds
       , EmptyCase
+      , FlexibleInstances
       , GADTs
       , InstanceSigs
       , PolyKinds
       , ScopedTypeVariables
       , TemplateHaskell
       , TypeApplications
+      , TypeFamilies
       , TypeInType
       , UndecidableInstances #-}
 module Firrtl.Lo.Syntax.Safe where
@@ -30,48 +37,43 @@ import Numeric.Natural
 $(singletons [d|
   data Gender = Bi | Female | Male
     deriving (Eq, Show)
-  |])
 
-$(singletons [d|
   data Signedness = Unsigned | Signed
     deriving (Eq, Show)
   |])
 
--- $(singletons [d|
---   data Ty = Ty (Signedness, Nat, Gender)
---     deriving Eq
---   |])
+data Ty :: Signedness -> Nat -> Gender -> Type where
+  TyRtl :: forall (s :: Signedness) (n :: Nat) (g :: Gender). Signedness -> Nat -> Gender -> Ty s n g
 
--- deriving instance Show Nat => Show Ty
+deriving instance Eq (Ty s n g)
 
-data TyRtl (s :: Signedness) (n :: Nat) (g :: Gender)
-  = TyRtl Signedness Nat Gender
-  deriving Eq
+data Expr :: Ty s n g -> Type where
+  Const :: Int -> Expr ('TyRtl s n g)
+  Ref   :: String -> Expr ('TyRtl s n g)
+  Valid
+    :: Expr ('TyRtl 'Unsigned 1 'Male)
+    -> Expr ('TyRtl s n g)
+    -> Expr ('TyRtl s n g)
 
-deriving instance Show Nat => Show (TyRtl s n g)
+deriving instance Show (Expr t)
 
-data ExprF :: Signedness -> Nat -> Gender -> Type where
-  Const :: Int    -> ExprF s n 'Male
-  Ref   :: String -> ExprF s n g
-  Valid :: ExprF 'Unsigned 1 'Male -> ExprF s n g
-
-sign_ :: Sing s -> ExprF s n g -> Signedness
+sign_ :: Sing s -> Expr ('TyRtl s n g) -> Signedness
 sign_ SSigned   _ = Signed
 sign_ SUnsigned _ = Unsigned
 
-sign :: SingI s => ExprF s n g -> Signedness
+sign :: SingI s => Expr ('TyRtl s n g) -> Signedness
 sign = sign_ sing
 
-gender_ :: Sing g -> ExprF s n g -> Gender
+width_ :: Sing n -> Expr ('TyRtl s n g) -> Natural
+width_ s _ = fromSing s
+
+width :: SingI n => Expr ('TyRtl s n g) -> Natural
+width = width_ sing
+
+gender_ :: Sing g -> Expr ('TyRtl s n g) -> Gender
 gender_ SBi     _ = Bi
 gender_ SFemale _ = Female
 gender_ SMale   _ = Male
 
-gender :: SingI g => ExprF s n g -> Gender
+gender :: SingI g => Expr ('TyRtl s n g) -> Gender
 gender = gender_ sing
-
-width_ :: Sing n -> ExprF s n g -> Natural
-width_ s _ = fromSing s
-
-width :: SingI n => ExprF s n g -> Natural
-width = width_ sing
