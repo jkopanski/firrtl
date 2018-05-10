@@ -17,6 +17,7 @@ https://blog.jle.im/entry/introduction-to-singletons-1.html
         DataKinds
       , EmptyCase
       , FlexibleInstances
+      , KindSignatures
       , GADTs
       , InstanceSigs
       , PolyKinds
@@ -29,12 +30,10 @@ https://blog.jle.im/entry/introduction-to-singletons-1.html
       , UndecidableInstances #-}
 module Firrtl.Lo.Syntax.Safe where
 
-import Data.Functor.Const
-import Data.Functor.Identity
-import Data.Kind
+import Data.Kind (type (*))
 import Data.Singletons
-import Data.Singletons.TypeLits
 import Data.Singletons.TH
+import Data.Singletons.TypeLits
 import Numeric.Natural
 
 import Data.Monoid ((<>))
@@ -53,82 +52,92 @@ $(singletons [d|
     deriving (Eq, Show)
   |])
 
-data Ty :: Signedness -> Nat -> Gender -> Type where
-  TyRtl :: forall (s :: Signedness) (n :: Nat) (g :: Gender). Signedness -> Nat -> Gender -> Ty s n g
+data Ty :: Signedness -> Nat -> Gender -> * where
+  TyRtl :: Signedness -> Nat -> Gender -> Ty s n g
 
 deriving instance Eq (Ty s n g)
 
-data ExprF :: (Ty s n g -> Type) -> Ty s n g -> Type where
-  Lit
-    :: Int
-    -> ExprF r ('TyRtl s n g)
-  Ref
-    :: String
-    -> ExprF r ('TyRtl s n g)
-  Valid
-    :: r ('TyRtl 'Unsigned 1 'Male)
-    -> r ('TyRtl s n g)
-    -> ExprF r ('TyRtl s n g)
+data Lit :: Ty s n g -> * where
+  SInt :: Int -> Lit ('TyRtl 'Signed n 'Male)
+  UInt :: Natural -> Lit ('TyRtl 'Unsigned n 'Male)
 
-newtype HFix h a = HFix { unFix :: h (HFix h) a }
-type Expr = HFix ExprF
+deriving instance Eq (Lit t)
+deriving instance Show (Lit t)
 
-newtype I a = I { unI :: a }
-newtype K a t = K { unK :: a }
+data Ref :: Ty s n g -> * where
+  Reference :: String -> Ref ('TyRtl s n g)
 
-instance Functor (K a) where
-  fmap _ (K v) = K v
+deriving instance Eq (Ref t)
+deriving instance Show (Ref t)
 
-type f :~> g = forall t. f t -> g t
+data ExprF :: (Ty s n g -> *) -> Ty s n g -> * where
+  Lit   :: Lit ('TyRtl s n g) -> ExprF r ('TyRtl s n g)
+  Ref   :: Ref ('TyRtl s n g) -> ExprF r ('TyRtl s n g)
+  Valid :: r ('TyRtl 'Unsigned 1 'Male) -> r ('TyRtl s n g) -> ExprF r ('TyRtl s n g)
 
-class HFunctor (h :: (Ty s n g -> Type) -> Ty s n g -> Type) where
-  hfmap :: (f :~> e) -> h f :~> h e
+-- deriving instance Eq (ExprF t)
+-- deriving instance Show (ExprF r t)
 
-instance HFunctor ExprF where
-  hfmap _ (Lit i) = Lit i
-  hfmap _ (Ref i) = Ref i
-  hfmap f (Valid cond sig) = Valid (f cond) (f sig)
+-- h :: (Ty s n g -> *) -> Ty s n g -> *
+-- t :: Ty s n g
+newtype TFix (h :: (Ty s n g -> *) -> Ty s n g -> *) (t :: Ty s n g) = TFix { unTFix :: h (TFix h) t }
+type Expr = TFix ExprF
 
-hcata :: HFunctor h => (h f :~> f) -> HFix h :~> f
-hcata alg = alg . hfmap (hcata alg) . unFix
+type e :~> f = forall (s :: Signedness) (n :: Nat) (g :: Gender). e ('TyRtl s n g) -> f ('TyRtl s n g)
+
+class TFunctor (h :: (Ty s n g -> *) -> Ty s n g -> *) where
+  tfmap :: (e :~> f) -> h e :~> h f
+
+instance TFunctor ExprF where
+  tfmap _ (Lit l) = Lit l
+  tfmap _ (Ref n) = Ref n
+  tfmap f (Valid cond sig) = Valid (f cond) (f sig)
+
+hcata :: TFunctor h => (h f :~> f) -> TFix h :~> f
+hcata alg = alg . tfmap (hcata alg) . unTFix
+
+newtype K x (t :: Ty s n g) = K { unK :: x }
 
 prettyExpr :: Expr ('TyRtl s n g) -> Doc Ann
 prettyExpr = unK . hcata alg
-  where alg :: ExprF (K (Doc Ann)) :~> K (Doc Ann)
-        alg (Ref ident)      = K $ Pretty.pretty ident
-        alg (Lit lit)        = K $ Pretty.pretty lit
-        alg (Valid cond sig)
-          = (\x y z ->
-               Pretty.pretty "validif" <> Pretty.tupled [y, z]) <$> cond <*> sig
 
--- sig  :: K (Doc Ann) ('TyRtl s3 n3 g3)
--- cond :: K (Doc Ann) ('TyRtl 'Unsigned 1 'Male)
--- alg  :: ExprF (K (Doc Ann)) t -> K (Doc Ann) t
+alg :: ExprF (K (Doc Ann)) ('TyRtl s n g) -> K (Doc Ann) ('TyRtl s n g)
+alg e@(Lit l) = K $ prettyLit l
+
+prettyLit :: Lit ('TyRtl s n g) -> Doc Ann
+prettyLit l = case l of
+  SInt v -> plit "SInt" <> {- wid (fromSing (sing :: Sing n)) <> -} val v
+  UInt v -> plit "UInt" <> {- wid (fromSing (sing :: Sing n)) <> -} val v
+  where
+    plit :: Text -> Doc Ann
+    plit t = Pretty.pretty t
+    val :: Pretty a => a -> Doc Ann
+    val = Pretty.parens . Pretty.pretty
+    wid :: Natural -> Doc Ann
+    wid = Pretty.angles . Pretty.pretty
 
 data Ann
   = Ground
   | Keyword
   | Operator
 
--- deriving instance Show (ExprF t)
-
-sign_ :: Sing s -> Expr ('TyRtl s n g) -> Signedness
+sign_ :: Sing s -> ExprF r ('TyRtl s n g) -> Signedness
 sign_ SSigned   _ = Signed
 sign_ SUnsigned _ = Unsigned
 
-sign :: SingI s => Expr ('TyRtl s n g) -> Signedness
+sign :: SingI s => ExprF r ('TyRtl s n g) -> Signedness
 sign = sign_ sing
 
-width_ :: Sing n -> Expr ('TyRtl s n g) -> Natural
+width_ :: Sing n -> ExprF r ('TyRtl s n g) -> Natural
 width_ s _ = fromSing s
 
-width :: SingI n => Expr ('TyRtl s n g) -> Natural
+width :: SingI n => ExprF r ('TyRtl s n g) -> Natural
 width = width_ sing
 
-gender_ :: Sing g -> Expr ('TyRtl s n g) -> Gender
+gender_ :: Sing g -> ExprF r ('TyRtl s n g) -> Gender
 gender_ SBi     _ = Bi
 gender_ SFemale _ = Female
 gender_ SMale   _ = Male
 
-gender :: SingI g => Expr ('TyRtl s n g) -> Gender
+gender :: SingI g => ExprF r ('TyRtl s n g) -> Gender
 gender = gender_ sing
