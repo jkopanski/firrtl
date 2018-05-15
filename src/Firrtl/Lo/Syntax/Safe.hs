@@ -58,8 +58,8 @@ data Ty :: Signedness -> Nat -> Gender -> * where
 deriving instance Eq (Ty s n g)
 
 data Lit :: Ty s n g -> * where
-  SInt :: Int -> Lit ('TyRtl 'Signed n 'Male)
-  UInt :: Natural -> Lit ('TyRtl 'Unsigned n 'Male)
+  SInt :: KnownNat n => Int -> Lit ('TyRtl 'Signed n 'Male)
+  UInt :: KnownNat n => Natural -> Lit ('TyRtl 'Unsigned n 'Male)
 
 deriving instance Eq (Lit t)
 deriving instance Show (Lit t)
@@ -102,12 +102,17 @@ prettyExpr :: Expr ('TyRtl s n g) -> Doc Ann
 prettyExpr = unK . hcata alg
 
 alg :: ExprF (K (Doc Ann)) ('TyRtl s n g) -> K (Doc Ann) ('TyRtl s n g)
-alg e@(Lit l) = K $ prettyLit l
+alg (Lit l) = K $ prettyLit l
+alg (Ref r) = K $ prettyRef r
+alg (Valid cond sig) =
+  let op   = Pretty.pretty ("validif" :: Text)
+      args = Pretty.parens . Pretty.hsep . Pretty.punctuate Pretty.comma
+   in K $ op <> args [unK cond, unK sig]
 
 prettyLit :: Lit ('TyRtl s n g) -> Doc Ann
 prettyLit l = case l of
-  SInt v -> plit "SInt" <> {- wid (fromSing (sing :: Sing n)) <> -} val v
-  UInt v -> plit "UInt" <> {- wid (fromSing (sing :: Sing n)) <> -} val v
+  SInt v -> plit "SInt" <> wid (width $ Lit l) <> val v
+  UInt v -> plit "UInt" <> wid (width $ Lit l) <> val v
   where
     plit :: Text -> Doc Ann
     plit t = Pretty.pretty t
@@ -115,6 +120,9 @@ prettyLit l = case l of
     val = Pretty.parens . Pretty.pretty
     wid :: Natural -> Doc Ann
     wid = Pretty.angles . Pretty.pretty
+
+prettyRef :: Ref ('TyRtl s n g) -> Doc Ann
+prettyRef (Reference name) = Pretty.pretty name
 
 data Ann
   = Ground
