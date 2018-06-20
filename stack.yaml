@@ -40,7 +40,9 @@ packages:
 - .
 # Dependency packages to be pulled from upstream that are not in the resolver
 # (e.g., acme-missiles-0.3)
-extra-deps: []
+extra-deps:
+- git: https://github.com/jkopanski/singleton-nats.git
+  commit: b29b02a77e38fdb0ac0c03401e1f2baa1149457a
 
 # Override default flag values for local packages and extra-deps
 # flags: {}

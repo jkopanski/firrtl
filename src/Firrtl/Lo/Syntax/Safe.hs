@@ -46,8 +46,7 @@ import Data.Kind (type (*))
 import Data.Singletons
 import Data.Singletons.Prelude.Num (type (+), type (-))
 import Data.Singletons.TH
-import Data.Singletons.TypeLits
--- import Data.Nat
+import Data.Nat
 import Data.Type.Bool
 import GHC.TypeNats (natVal)
 
@@ -67,8 +66,8 @@ data ExprF :: (KTy -> *) -> KTy -> * where
   Ref  :: Id      -> ExprF r t
 
   -- | Standard expressions
-  Valid :: r '( 'Unsigned, 1, 'Male) -> r t        -> ExprF r t
-  Mux   :: r '( 'Unsigned, 1, 'Male) -> r t -> r t -> ExprF r t
+  Valid :: r '( 'Unsigned, Lit 1, 'Male) -> r t        -> ExprF r t
+  Mux   :: r '( 'Unsigned, Lit 1, 'Male) -> r t -> r t -> ExprF r t
 
   -- | PrimOps with some complex type expr
   Add :: forall (s1 :: TyRtl) (w1 :: Nat) (s2 :: TyRtl) (w2 :: Nat) (r :: KTy -> *)
@@ -93,17 +92,17 @@ data SomeExpr :: * where
 --            -> SomeExpr
 -- mkSomeExpr ty e = withSomeSing ty $ \ts -> MkSomeExpr ts e
 
-mkUInt :: Sing n -> Natural -> ExprF r '( 'Unsigned, n, 'Male)
-mkUInt _ = UInt
+-- mkUInt :: Sing n -> Natural -> ExprF r '( 'Unsigned, n, 'Male)
+-- mkUInt _ = UInt
 
-mkSInt :: Sing n -> Int -> ExprF r '( 'Signed, n, 'Male)
-mkSInt _ = SInt
+-- mkSInt :: Sing n -> Int -> ExprF r '( 'Signed, n, 'Male)
+-- mkSInt _ = SInt
 
-mkRef :: Sing t -> Id -> ExprF r t
-mkRef _ = Ref
+-- mkRef :: Sing t -> Id -> ExprF r t
+-- mkRef _ = Ref
 
-mkValid :: Sing t -> r '( 'Unsigned, 1, 'Male) -> r t -> ExprF r t
-mkValid _ = Valid
+-- mkValid :: Sing t -> r '( 'Unsigned, 1, 'Male) -> r t -> ExprF r t
+-- mkValid _ = Valid
 
 fromExpr_ :: Sing t -> Expr t -> SomeExpr
 fromExpr_ = MkSomeExpr
@@ -164,7 +163,7 @@ isCond expr = case typeOf expr of
 -- withExpr 
 
 typeOf :: SomeExpr -> (TyRtl, Natural, Gender)
-typeOf (MkSomeExpr s e) = fromSing s
+typeOf (MkSomeExpr s e) = tyNat $ fromSing s
 
 tyrtl_ :: Sing s -> ExprF r '(s, n, g) -> TyRtl
 tyrtl_ SSigned   _ = Signed
@@ -175,7 +174,7 @@ tyrtl :: SingI s => ExprF r '(s, n, g) -> TyRtl
 tyrtl = tyrtl_ sing
 
 width_ :: Sing n -> ExprF r '(s, n, g) -> Natural
-width_ s _ = fromSing s
+width_ s _ = nat $ fromSing s
 
 width :: SingI n => ExprF r '(s, n, g) -> Natural
 width = width_ sing

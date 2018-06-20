@@ -13,6 +13,7 @@ Type is a triple, cointaining:
 {-# language
         DataKinds
       , EmptyCase
+      , PatternSynonyms
       , ScopedTypeVariables
       , TemplateHaskell
       , TypeFamilies
@@ -20,10 +21,9 @@ Type is a triple, cointaining:
 module Firrtl.Lo.TypeCheck.Ty where
 
 import Data.Singletons.TH
-import Data.Singletons.TypeLits
--- import Data.Nat
+import Data.Nat
 import Data.Type.Bool
-import Numeric.Natural
+import Numeric.Natural (Natural)
 
 $(singletons [d|
   data Gender = Bi | Female | Male
@@ -32,9 +32,22 @@ $(singletons [d|
   data TyRtl = Unsigned | Signed | Clock
     deriving (Eq, Show)
 
-  type Ty  = (TyRtl, Natural, Gender)
+  type Ty  = (TyRtl, Nat, Gender)
 
   |])
+
+nat :: Nat -> Natural
+nat Z = 0
+nat (S n) = 1 + nat n
+
+tyNat :: Ty -> (TyRtl, Natural, Gender)
+tyNat (t, n, g) = (t, nat n, g)
+
+pattern Bit      = SS SZ
+pattern Nibble   = SS (SS (SS Bit))
+pattern Byte     = SS (SS (SS (SS Nibble)))
+pattern HalfWord = SS (SS (SS (SS (SS (SS (SS (SS Byte)))))))
+pattern Word     = SS (SS (SS (SS (SS (SS (SS (SS (SS (SS (SS (SS (SS (SS (SS (SS HalfWord)))))))))))))))
 
 type KTy = (TyRtl, Nat, Gender)
 

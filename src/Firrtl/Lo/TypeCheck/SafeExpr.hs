@@ -5,11 +5,11 @@
       , TypeInType #-}
 module Firrtl.Lo.TypeCheck.SafeExpr where
 
-import           Control.Monad.Except (throwError)
+import Control.Monad.Except (throwError)
 import Data.Functor.Foldable
 import Data.Singletons
 import Data.Singletons.Prelude hiding (Error)
-import Data.Singletons.TypeLits hiding (Error)
+import Data.Nat
 import Numeric.Natural
 
 import Unsafe.Coerce (unsafeCoerce)
@@ -32,14 +32,14 @@ alg (LitF l) = Right $ case l of
   -- FIXME: calculate or use provided width
   UInt w ->
     let n = fromIntegral w :: Natural
-     in withSomeSing n $ \sn ->
-          Safe.fromExpr_ (STuple3 SUnsigned sn SMale)
-                         (Safe.TFix $ Safe.UInt n)
+     in case someNatVal n of
+          SomeSing sn -> Safe.fromExpr_ (STuple3 SUnsigned sn SMale)
+                                        (Safe.TFix $ Safe.UInt n)
   SInt w ->
     let n = fromIntegral w :: Natural
-     in withSomeSing n $ \sn ->
-          Safe.fromExpr_ (STuple3 SSigned sn SMale)
-                         (Safe.TFix $ Safe.SInt w)
+     in case someNatVal n of
+          SomeSing sn -> Safe.fromExpr_ (STuple3 SSigned sn SMale)
+                                        (Safe.TFix $ Safe.SInt w)
 
 alg (ValidF scond@(Safe.MkSomeExpr _ e) (Safe.MkSomeExpr ss se))
   | Safe.isCond scond =

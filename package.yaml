@@ -44,6 +44,7 @@ dependencies:
   - prettyprinter-ansi-terminal
   - recursion-schemes
   - singletons >= 2.4
+  - singleton-nats
   - text
   - transformers
   - unordered-containers
