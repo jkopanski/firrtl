@@ -1,19 +1,23 @@
-{-# language StandaloneDeriving, UndecidableInstances #-}
+{-# language DataKinds, UndecidableInstances, TypeInType #-}
 module Firrtl.Lo.TypeCheck.Monad where
 
+import           Control.Monad              ((>=>))
 import           Control.Monad.Except       (MonadError (..))
 import           Control.Monad.Reader       (MonadReader (..))
 import           Control.Monad.Identity     (Identity (..))
 import           Control.Monad.Trans.Except (ExceptT)
 import           Control.Monad.Trans.Reader (ReaderT)
 
+import           Data.Functor.Foldable
 import           Data.HashMap.Strict (HashMap)
 import qualified Data.HashMap.Strict as Map
+import           Data.Kind (type (*))
 import           Data.Semigroup      (Semigroup (..))
 
 import qualified Numeric.Natural     as N
 
 import Firrtl.Lo.Syntax
+import Firrtl.Lo.TypeCheck.Ty
 import Firrtl.Lo.TypeCheck.Types
 
 data Error
@@ -56,3 +60,14 @@ newtype Check a = Check { runCheck :: ExceptT Error (ReaderT Context Identity) a
 
 deriving instance (ErrorType Check ~ Error) => MonadError Check
 deriving instance (EnvType Check ~ Context) => MonadReader Check
+
+class Typed ast where
+  -- type TypeFor ast
+  type TypeSafe ast
+
+--   hasType  :: TypeFor ast -> Check ()
+--   typeOf   :: ast -> Check (TypeFor ast)
+  typeSafe :: ast -> Check (TypeSafe ast)
+
+cataM :: (Traversable (Base t), Monad m, Recursive t) => (Base t c -> m c) -> t -> m c
+cataM = cata . (sequence >=>)

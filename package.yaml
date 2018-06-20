@@ -23,6 +23,7 @@ default-extensions:
   - FlexibleContexts
   - GADTs
   - GeneralizedNewtypeDeriving
+  - InstanceSigs
   - KindSignatures
   - LambdaCase
   - MultiParamTypeClasses
