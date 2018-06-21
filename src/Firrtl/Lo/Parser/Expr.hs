@@ -11,6 +11,7 @@ import Text.Parser.Char
 import Text.Parser.Token hiding (hexadecimal, octal)
 
 import qualified Data.Char
+import Numeric.Natural
 
 expr :: (Monad m, TokenParsing m) => m Expr
 expr = ref
@@ -135,7 +136,7 @@ binary :: TokenParsing m => m Integer
 binary = text "0b" *> number 2 binDigit
 {-# INLINE binary #-}
 
-size :: TokenParsing m => m Int
+size :: TokenParsing m => m Natural
 size = angles $ fromInteger <$> natural
 
 value :: TokenParsing m => m Int
@@ -144,13 +145,14 @@ value = fromInteger <$> integer
 unsignedLit :: (Monad m, TokenParsing m) => m Literal
 unsignedLit = do
   reserved "UInt"
+  size <- size
   val <- fromInteger <$> parens (decimal <|> (stringLiteral >> (hexadecimal <|> octal <|> binary)))
-  pure (UInt val)
+  pure (UInt size val)
 
 signedLit :: (Monad m, TokenParsing m) => m Literal
 signedLit = do
   reserved "SInt"
   -- TODO: use width hint
-  msize <- optional size
+  size <- size
   val <- fromInteger <$> parens (integer <|> (stringLiteral >> (hexadecimal <|> octal <|> binary)))
-  pure (SInt val)
+  pure (SInt size val)

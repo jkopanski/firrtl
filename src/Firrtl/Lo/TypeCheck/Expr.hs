@@ -23,8 +23,8 @@ typeof (Ref ident) = asks (lookup ident) >>= \case
 typeof (Parameter (Imm n)) = pure $ male $ Natural n
 
 typeof (Lit l) = case l of
-  UInt i -> pure $ male $ Unsigned (minBitWidth i)
-  SInt i -> pure $ male $ Signed (minSignedBitWidth i)
+  UInt w i -> pure $ male $ Unsigned (fromInteger $ toInteger w)
+  SInt w i -> pure $ male $ Signed (fromInteger $ toInteger w)
 
 typeof (Valid cond e) = do
   t <- typeof cond

@@ -78,9 +78,9 @@ instance Pretty.Pretty Expr.TernaryOp where
   pretty Expr.Bits = Pretty.pretty ("bits" :: Text)
 
 instance Pretty.Pretty Expr.Literal where
-  pretty (Expr.UInt u) = Pretty.pretty ("UInt" :: Text)
+  pretty (Expr.UInt _ u) = Pretty.pretty ("UInt" :: Text)
                       <> Pretty.parens (Pretty.pretty u)
-  pretty (Expr.SInt s) = Pretty.pretty ("SInt" :: Text)
+  pretty (Expr.SInt _ s) = Pretty.pretty ("SInt" :: Text)
                       <> Pretty.parens (Pretty.pretty s)
 
 prettyType :: Types.Type -> Doc Ann

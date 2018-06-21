@@ -47,8 +47,6 @@ pattern SOne = SS SZ
 pattern STwo = SS SOne
 pattern SFour = SS (SS STwo)
 
-type KTy = (TyRtl, Nat, Gender)
-
 type family IsClock (a :: TyRtl) where
   IsClock 'Clock = 'True
   IsClock _      = 'False
