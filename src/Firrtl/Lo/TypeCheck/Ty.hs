@@ -43,11 +43,9 @@ nat (S n) = 1 + nat n
 tyNat :: Ty -> (TyRtl, Natural, Gender)
 tyNat (t, n, g) = (t, nat n, g)
 
-pattern Bit      = SS SZ
-pattern Nibble   = SS (SS (SS Bit))
-pattern Byte     = SS (SS (SS (SS Nibble)))
-pattern HalfWord = SS (SS (SS (SS (SS (SS (SS (SS Byte)))))))
-pattern Word     = SS (SS (SS (SS (SS (SS (SS (SS (SS (SS (SS (SS (SS (SS (SS (SS HalfWord)))))))))))))))
+pattern SOne = SS SZ
+pattern STwo = SS SOne
+pattern SFour = SS (SS STwo)
 
 type KTy = (TyRtl, Nat, Gender)
 

@@ -8,11 +8,10 @@ module Firrtl.Lo.TypeCheck.SafeExpr where
 import Control.Monad.Except (throwError)
 import Data.Functor.Foldable
 import Data.Singletons
+import Data.Singletons.Decide
 import Data.Singletons.Prelude hiding (Error)
 import Data.Nat
 import Numeric.Natural
-
-import Unsafe.Coerce (unsafeCoerce)
 
 import qualified Firrtl.Lo.Syntax.Safe as Safe
 import           Firrtl.Lo.Syntax.Expr
@@ -41,19 +40,16 @@ alg (LitF l) = Right $ case l of
           SomeSing sn -> Safe.fromExpr_ (STuple3 SSigned sn SMale)
                                         (Safe.TFix $ Safe.SInt w)
 
-alg (ValidF scond@(Safe.MkSomeExpr _ e) (Safe.MkSomeExpr ss se))
-  | Safe.isCond scond =
-      Right $ Safe.fromExpr_ ss (Safe.TFix $ Safe.Valid (unsafeCoerce e) se)
-  | otherwise =
+alg (ValidF scond@(Safe.MkSomeExpr sc ec) (Safe.MkSomeExpr ss es)) =
+  case sc of
+    STuple3 SUnsigned SOne SMale ->
+      Right $ Safe.fromExpr_ ss (Safe.TFix $ Safe.Valid ec es)
+    _ ->
       Left $ NoTopModule "test"
 
-alg (MuxF scond@(Safe.MkSomeExpr _ e) (Safe.MkSomeExpr sl el) (Safe.MkSomeExpr sr er))
-  | Safe.isCond scond =
-      if fromSing sl == fromSing sr
-         then Right
-              $ Safe.fromExpr_ sl (Safe.TFix
-                                   $ Safe.Mux (unsafeCoerce e)
-                                              el
-                                              (unsafeCoerce er))
-         else Left $ NoTopModule "same type"
-  | otherwise = Left $ NoTopModule "conditional signal"
+alg (MuxF scond@(Safe.MkSomeExpr sc ec) (Safe.MkSomeExpr sl el) (Safe.MkSomeExpr sr er)) =
+  case sc of
+    STuple3 SUnsigned SOne SMale -> case sr %~ sl of
+      Proved Refl -> Right $ Safe.fromExpr_ sl (Safe.TFix $ Safe.Mux ec el er)
+      Disproved _ -> Left $ NoTopModule "same type"
+    _ -> Left $ NoTopModule "conditional signal"
