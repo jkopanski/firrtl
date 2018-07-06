@@ -1,4 +1,7 @@
-{-# language DataKinds, UndecidableInstances, TypeInType #-}
+{-# language
+        DataKinds
+      , UndecidableInstances
+      , TypeInType #-}
 module Firrtl.Lo.TypeCheck.Monad where
 
 import           Control.Monad              ((>=>))
@@ -11,52 +14,63 @@ import           Control.Monad.Trans.Reader (ReaderT)
 import           Data.Functor.Foldable
 import           Data.HashMap.Strict (HashMap)
 import qualified Data.HashMap.Strict as Map
-import           Data.Kind (type (*))
+-- import           Data.Kind (type (*))
 import           Data.Semigroup      (Semigroup (..))
+import           Data.Singletons
+import           Data.Nat
 
 import qualified Numeric.Natural     as N
 
 import Firrtl.Lo.Syntax
+import Firrtl.Lo.Syntax.Safe.Expr as Safe
 import Firrtl.Lo.TypeCheck.Ty
-import Firrtl.Lo.TypeCheck.Types
 
 data Error
-  = ExpectedGround    Type
-  | ExpectedGroundInt Type
-  | ExpectedParameter Type
-  | Mismatch Type Type
-  | NotInScope Id (Maybe Type)
+  = ExpectedGround    Ty
+  | ExpectedGroundInt Ty
+  | ExpectedParameter Ty
+  | Mismatch Ty Ty
+  | NodeMale Ty
+  | NotInScope Id (Maybe Ty)
   | NoTopModule Id
-  | ParameterToBig N.Natural Type
-  | Connectable ConnType ConnType
-  | Containable ConnType ConnType
-  | Equivalent ConnType ConnType
+  | ParameterToBig N.Natural Ty
+  | Connectable Ty Ty
+  | Containable Ty Ty
+  | Equivalent Ty Ty
   deriving Show
 
-newtype Context = Ctx { unCtx :: HashMap Id ConnType }
+data Context =
+  Ctx { nodes :: HashMap Id Safe.SomeExpr
+      , wires :: HashMap Id Safe.SomeExpr
+      }
 
 instance Semigroup Context where
-  (<>) (Ctx cl) (Ctx cr) = Ctx $ Map.union cl cr
+  (<>) cl cr = Ctx { nodes = Map.union (nodes cl) (nodes cr)
+                   , wires = Map.union (wires cl) (wires cr)
+                   }
 
 instance Monoid Context where
   mappend = (<>)
-  mempty  = Ctx Map.empty
+  mempty  = Ctx Map.empty Map.empty
 
-singleton :: Id -> ConnType -> Context
-singleton ident = Ctx . Map.singleton ident
+-- singleton :: Id -> Ty -> Context
+-- singleton ident = Ctx . Map.singleton ident
 
-insert :: Id -> ConnType -> Context -> Context
-insert ident t = Ctx . Map.insert ident t . unCtx
+insertNode :: (SingI s, SingI n) => Id -> Safe.Expr '(s, n, 'Male) -> Context -> Context
+insertNode ident e ctx =
+  Ctx { nodes = Map.insert ident (fromExpr e) (nodes ctx) }
 
-lookup :: Id -> Context -> Maybe ConnType
-lookup ident = Map.lookup ident . unCtx
+-- TODO: this could guarantee thet it is Safe.Expr '(s, n, 'Male)
+lookupNode :: Id -> Context -> Maybe Safe.SomeExpr
+lookupNode ident = Map.lookup ident . nodes
 
-newtype Check a = Check { runCheck :: ExceptT Error (ReaderT Context Identity) a }
-  deriving
-    ( Functor
-    , Applicative
-    , Monad
-    )
+newtype Check a =
+  Check { runCheck :: ExceptT Error (ReaderT Context Identity) a }
+    deriving
+      ( Functor
+      , Applicative
+      , Monad
+      )
 
 deriving instance (ErrorType Check ~ Error) => MonadError Check
 deriving instance (EnvType Check ~ Context) => MonadReader Check

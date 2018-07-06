@@ -17,12 +17,10 @@ https://blog.jle.im/entry/introduction-to-singletons-1.html
         DataKinds
       , EmptyCase
       , FlexibleInstances
-      , KindSignatures
       , GADTs
+      , KindSignatures
       , PolyKinds
       , ScopedTypeVariables
-      , TemplateHaskell
-      , TypeApplications
       , TypeFamilies
       , TypeOperators
       , TypeInType
@@ -58,7 +56,6 @@ import Firrtl.Lo.Syntax.Common  (Id)
 import Firrtl.Lo.Syntax.Safe.PrimOpsTy
 import Firrtl.Lo.TypeCheck.Ty
 
-
 data ExprF :: (Ty -> *) -> Ty -> * where
   -- | Constants
   UInt :: Natural -> ExprF r '( 'Unsigned, n, 'Male)
@@ -87,23 +84,17 @@ type e :~> f = forall (t :: Ty). e t -> f t
 data SomeExpr :: * where
   MkSomeExpr :: Sing t -> Expr t -> SomeExpr
 
--- mkSomeExpr :: forall (t :: Ty)
---            .  Ty
---            -> Expr t
---            -> SomeExpr
--- mkSomeExpr ty e = withSomeSing ty $ \ts -> MkSomeExpr ts e
+mkUInt :: Sing n -> Natural -> ExprF r '( 'Unsigned, n, 'Male)
+mkUInt _ = UInt
 
--- mkUInt :: Sing n -> Natural -> ExprF r '( 'Unsigned, n, 'Male)
--- mkUInt _ = UInt
+mkSInt :: Sing n -> Int -> ExprF r '( 'Signed, n, 'Male)
+mkSInt _ = SInt
 
--- mkSInt :: Sing n -> Int -> ExprF r '( 'Signed, n, 'Male)
--- mkSInt _ = SInt
+mkRef :: Sing t -> Id -> ExprF r t
+mkRef _ = Ref
 
--- mkRef :: Sing t -> Id -> ExprF r t
--- mkRef _ = Ref
-
--- mkValid :: Sing t -> r '( 'Unsigned, 1, 'Male) -> r t -> ExprF r t
--- mkValid _ = Valid
+mkValid :: Sing t -> r '( 'Unsigned, Lit 1, 'Male) -> r t -> ExprF r t
+mkValid _ = Valid
 
 fromExpr_ :: Sing t -> Expr t -> SomeExpr
 fromExpr_ = MkSomeExpr

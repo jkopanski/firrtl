@@ -1,54 +1,32 @@
-{-|
-Type checker for FIRRTL statements.
-Checks if Statemets are legal.
-|-}
+{-# language
+        DataKinds
+      , TypeInType #-}
 module Firrtl.Lo.TypeCheck.Stmt where
 
-import Prelude hiding (lookup)
-
-import Control.Monad        (unless)
 import Control.Monad.Except (throwError)
-import Control.Monad.Reader (asks)
+import Data.Singletons.Prelude
 
-import Firrtl.Lo.Syntax.Stmt
-import Firrtl.Lo.TypeCheck.Expr
-import Firrtl.Lo.TypeCheck.Monad
-import Firrtl.Lo.TypeCheck.Types
+import qualified Firrtl.Lo.Syntax.Safe as Safe
+import           Firrtl.Lo.Syntax.Expr
+import           Firrtl.Lo.Syntax.Stmt
+import           Firrtl.Lo.TypeCheck.Monad
+import           Firrtl.Lo.TypeCheck.Ty
+import           Firrtl.Lo.TypeCheck.Expr
 
-check :: Stmt -> Check ()
-check (Block stmts) = mapM_ check stmts
+instance Typed Stmt where
+  type TypeSafe Stmt = Safe.Stmt
 
-check (Connect target source) = do
-  tytarget <- typeof target
-  tysource <- typeof source
-  unless (tytarget `connectable` tysource) (throwError $ Connectable tytarget tysource)
-  unless (tytarget `containable` tysource) (throwError $ Containable tytarget tysource)
-  unless (tytarget `equivalent` tysource) (throwError $ Equivalent tytarget tysource)
-  pure ()
+  typeSafe :: Stmt -> Check Safe.Stmt
+  typeSafe (Block stmts) = Safe.Block <$> sequence (typeSafe <$> stmts)
 
-check (Node ident expr) = do
-  ty <- typeof expr
-  asks (lookup ident)
-    >>= \case
-      Nothing -> throwError $ NotInScope ident (Just $ connType ty)
-      Just tyid -> unless (tyid == ty) (throwError $ Mismatch (connType ty) (connType tyid))
+  typeSafe Empty = pure Safe.Empty
 
-check (Print clk cond _ _) = do
-  tyclk <- typeof clk
-  tycond <- typeof cond
-  let contyclk = connType tyclk
-      contycond = connType tycond
-  unless (contyclk == Clock) (throwError $ Mismatch Clock contyclk)
-  unless (contycond == Unsigned 1) (throwError $ Mismatch (Unsigned 1) contycond)
-
-check (Stop clk halt _) = do
-  tyclk <- typeof clk
-  tyhalt <- typeof halt
-  let contyclk = connType tyclk
-      contyhalt = connType tyhalt
-  unless (contyclk == Clock) (throwError $ Mismatch Clock contyclk)
-  unless (contyhalt == Unsigned 1) (throwError $ Mismatch (Unsigned 1) contyhalt)
-
-check Empty = pure ()
-check (Invalid _) = pure ()
-check (Wire _ _) = pure ()
+  typeSafe (Node ident expr) = do
+    sexpr <- typeSafe expr
+    case sexpr of
+      Safe.MkSomeExpr se ee -> case se of
+        STuple3 _ _ SMale -> do
+          -- TODO: add context mutability
+          -- insertNode ident ee ctx
+          pure $ Safe.Node ident ee
+        _ -> throwError $ NodeMale (fromSing se)
