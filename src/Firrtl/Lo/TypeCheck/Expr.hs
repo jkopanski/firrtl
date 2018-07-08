@@ -5,7 +5,7 @@
 module Firrtl.Lo.TypeCheck.Expr where
 
 import Control.Monad.Except (throwError)
-import Control.Monad.Reader (ask)
+import Control.Monad.State  (get)
 import Data.Functor.Foldable
 import Data.Singletons
 import Data.Singletons.Decide
@@ -24,9 +24,10 @@ instance Typed Expr where
 
   typeSafe :: Expr -> Check Safe.SomeExpr
   typeSafe e = do
-    ctx <- ask
+    ctx <- get
     either throwError pure $ cataM (alg ctx) e
 
+-- | this is awesome as actually only statements can extend Context
 alg :: Context -> ExprF Safe.SomeExpr -> Either Error Safe.SomeExpr
 alg ctx (RefF ident) =
   let mexpr = lookupNode ident ctx

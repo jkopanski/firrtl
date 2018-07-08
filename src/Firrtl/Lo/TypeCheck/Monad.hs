@@ -6,10 +6,10 @@ module Firrtl.Lo.TypeCheck.Monad where
 
 import           Control.Monad              ((>=>))
 import           Control.Monad.Except       (MonadError (..))
-import           Control.Monad.Reader       (MonadReader (..))
+import           Control.Monad.State        (MonadState (..))
 import           Control.Monad.Identity     (Identity (..))
 import           Control.Monad.Trans.Except (ExceptT)
-import           Control.Monad.Trans.Reader (ReaderT)
+import           Control.Monad.Trans.State  (StateT)
 
 import           Data.Functor.Foldable
 import           Data.HashMap.Strict (HashMap)
@@ -58,14 +58,17 @@ instance Monoid Context where
 
 insertNode :: (SingI s, SingI n) => Id -> Safe.Expr '(s, n, 'Male) -> Context -> Context
 insertNode ident e ctx =
-  Ctx { nodes = Map.insert ident (fromExpr e) (nodes ctx) }
+  ctx { nodes = Map.insert ident (fromExpr e) (nodes ctx) }
 
 -- TODO: this could guarantee thet it is Safe.Expr '(s, n, 'Male)
 lookupNode :: Id -> Context -> Maybe Safe.SomeExpr
 lookupNode ident = Map.lookup ident . nodes
 
+-- Should we go ReaderT and mutate it's context?
+-- Check { runCheck :: ExceptT Error (ReaderT Context IO) a }
+-- https://www.fpcomplete.com/blog/2017/07/the-rio-monad
 newtype Check a =
-  Check { runCheck :: ExceptT Error (ReaderT Context Identity) a }
+  Check { runCheck :: ExceptT Error (StateT Context Identity) a }
     deriving
       ( Functor
       , Applicative
@@ -73,7 +76,12 @@ newtype Check a =
       )
 
 deriving instance (ErrorType Check ~ Error) => MonadError Check
-deriving instance (EnvType Check ~ Context) => MonadReader Check
+-- deriving instance (StateType Check ~ Context) => MonadState Check
+
+instance MonadState Check where
+  type StateType Check = Context
+  get = get
+  put = put
 
 class Typed ast where
   -- type TypeFor ast
