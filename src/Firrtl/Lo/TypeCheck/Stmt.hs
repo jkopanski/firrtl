@@ -4,6 +4,7 @@
 module Firrtl.Lo.TypeCheck.Stmt where
 
 import Control.Monad.Except (throwError)
+import Control.Monad.State  (modify)
 import Data.Singletons.Prelude
 
 import qualified Firrtl.Lo.Syntax.Safe as Safe
@@ -25,8 +26,8 @@ instance Typed Stmt where
     sexpr <- typeSafe expr
     case sexpr of
       Safe.MkSomeExpr se ee -> case se of
-        STuple3 _ _ SMale -> do
-          -- TODO: add context mutability
-          -- insertNode ident ee ctx
+        STuple3 s1 s2 SMale -> do
+          withSingI s1 $ withSingI s2 $
+            modify (insertNode ident ee)
           pure $ Safe.Node ident ee
         _ -> throwError $ NodeMale (fromSing se)
