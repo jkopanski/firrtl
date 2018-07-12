@@ -7,7 +7,7 @@ import Firrtl.Lo.Parser.Expr
 import Firrtl.Lo.Parser.Monad
 import Firrtl.Lo.Syntax.Expr
 import Firrtl.Lo.Syntax.Stmt
-import Firrtl.Lo.TypeCheck.Types
+import Firrtl.Lo.TypeCheck.Ty
 import Text.Parser.Combinators
 import Text.Parser.Token
 
@@ -17,9 +17,9 @@ stmt = empty
    <|> node
    <|> print
    <|> stop
-   <|> wire
+   -- <|> wire
 
-block, empty, node, print, stop, wire
+block, empty, node, print, stop -- , wire
   :: (Monad m, TokenParsing m) => m Stmt
 block = Block <$> some stmt
 empty = reserved "skip" $> Empty <?> "empty statement"
@@ -39,7 +39,7 @@ stop = Stop
    <*> (comma *> expr <?> "halt condition signal")
    <*> (comma *> (fromIntegral <$> integer) <* symbolic ')' <?> "exit code")
 
-wire = reserved "wire" *> (Wire <$> (identifier <* symbolic ':') <*> typeDecl)
+-- wire = reserved "wire" *> (Wire <$> (identifier <* symbolic ':') <*> typeDecl)
 
 -- ^ statements which are starting with expression
 -- | combined to single function to avoid backtracking
@@ -57,12 +57,12 @@ exprFirstStmt = do
     invalid :: (Monad m, TokenParsing m) => Expr -> m Stmt
     invalid e = reserved "is" *> reserved "invalid" $> Invalid e
 
-typeDecl :: (Monad m, TokenParsing m) => m Type
+typeDecl :: (Monad m, TokenParsing m) => m TyRtl
 typeDecl = clock
        <|> signed
        <|> unsigned
 
-clock, signed, unsigned :: (Monad m, TokenParsing m) => m Type
+clock, signed, unsigned :: (Monad m, TokenParsing m) => m TyRtl
 clock = reserved "Clock" $> Clock
-signed = reserved "SInt" *> (Signed <$> size)
-unsigned = reserved "UInt" *> (Unsigned <$> size)
+signed = reserved "SInt" $> Signed
+unsigned = reserved "UInt" $> Unsigned

@@ -6,10 +6,11 @@ import Control.Applicative      ((<|>))
 import Data.Functor             (($>))
 import Data.List.NonEmpty       (fromList)
 import Data.Maybe               (fromMaybe)
+import Firrtl.Lo.Parser.Expr
 import Firrtl.Lo.Parser.Monad
 import Firrtl.Lo.Parser.Stmt
 import Firrtl.Lo.Syntax
-import Firrtl.Lo.TypeCheck.Types
+import Firrtl.Lo.TypeCheck.Ty
 import Text.Megaparsec          (MonadParsec, Pos, Token)
 import Text.Parser.Combinators
 import Text.Parser.Token
@@ -112,14 +113,17 @@ indentedItem :: (MonadParsec e s m, Token s ~ Char)
   -> m b
 indentedItem ref sc p = Text.Megaparsec.Char.Lexer.indentGuard sc EQ ref *> p
 
+-- FIXME: convert ConnType -> Ty
 port :: (Monad m, TokenParsing m) => m Port
 port = do
   gender <- direction
   name <- identifier
   _ <- symbolic ':'
   ty <- typeDecl
-  pure $ Port name (gender ty)
+  width <- size
+  pure $ Port name (ty, width, gender)
 
-direction :: (Monad m, TokenParsing m) => m (Type -> ConnType)
-direction = reserved "input"  $> male
-        <|> reserved "output" $> female
+direction :: (Monad m, TokenParsing m) => m Gender
+direction = reserved "input"  $> Male
+        <|> reserved "output" $> Female
+        <|> reserved "inout"  $> Bi

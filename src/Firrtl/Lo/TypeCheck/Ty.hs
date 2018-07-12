@@ -29,7 +29,7 @@ $(singletons [d|
   data Gender = Bi | Female | Male
     deriving (Eq, Show)
 
-  data TyRtl = Unsigned | Signed | Clock
+  data TyRtl = Clock | Signed | Unsigned
     deriving (Eq, Show)
 
   type Ty  = (TyRtl, Nat, Gender)

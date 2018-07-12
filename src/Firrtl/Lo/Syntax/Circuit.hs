@@ -1,10 +1,11 @@
 module Firrtl.Lo.Syntax.Circuit where
 
 import Data.List.NonEmpty (NonEmpty)
+import Numeric.Natural (Natural)
 
 import Firrtl.Lo.Syntax.Common
 import Firrtl.Lo.Syntax.Stmt
-import Firrtl.Lo.TypeCheck.Types
+import Firrtl.Lo.TypeCheck.Ty
 
 data Circuit
   = Circuit Id                -- circuit name
@@ -20,7 +21,7 @@ data Module
   deriving (Eq, Show)
 
 data Port = Port Id       -- port name
-                 ConnType -- port gender
+                 (TyRtl, Natural, Gender)  -- port type
   deriving (Eq, Show)
 
 moduleName :: Module -> Id
