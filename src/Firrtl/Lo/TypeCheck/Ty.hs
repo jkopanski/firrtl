@@ -17,6 +17,7 @@ Type is a triple, cointaining:
       , ScopedTypeVariables
       , TemplateHaskell
       , TypeFamilies
+      , TypeOperators
       , UndecidableInstances #-}
 module Firrtl.Lo.TypeCheck.Ty where
 
@@ -61,3 +62,21 @@ type family IsSigned (a :: TyRtl) where
 type family IsUnsigned (a :: TyRtl) where
   IsUnsigned 'Unsigned = 'True
   IsUnsigned _         = 'False
+
+type family IsBi (a :: Gender) where
+  IsBi 'Bi = 'True
+  IsBi _   = 'False
+
+type family IsFemale (a :: Gender) where
+  IsFemale 'Female = 'True
+  IsFemale _       = 'False
+
+type family IsMale (a :: Gender) where
+  IsMale 'Male = 'True
+  IsMale _     = 'False
+
+type family IsValidLHS (a :: Gender) where
+  IsValidLHS a = IsBi a || IsFemale a
+
+type family IsValidRHS (a :: Gender) where
+  IsValidRHS a = IsBi a || IsMale a
