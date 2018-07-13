@@ -77,6 +77,10 @@ type family IsMale (a :: Gender) where
 
 type family IsValidLHS (a :: Gender) where
   IsValidLHS a = IsBi a || IsFemale a
+  -- IsValidLHS 'Male = 'False
+  -- IsValidLHS _     = 'True
 
 type family IsValidRHS (a :: Gender) where
   IsValidRHS a = IsBi a || IsMale a
+  -- IsValidRHS 'Female = 'False
+  -- IsValidRHS _       = 'True
