@@ -2,11 +2,34 @@
         DataKinds
       , UndecidableInstances
       , TypeInType #-}
-module Firrtl.Lo.TypeCheck.Monad where
+module Firrtl.Lo.TypeCheck.Monad
+  ( Check (..)
+  -- re-exports
+  , get
+  , modify
+  , put
+  , throwError
+
+  -- classes
+  , Typed (..)
+
+  -- Context
+  , Context (..)
+  , insertNode
+  , insertPort
+  , lookupNode
+  , lookupPort
+
+  -- Errors
+  , Error (..)
+
+  -- misc
+  , cataM
+  ) where
 
 import           Control.Monad              ((>=>))
 import           Control.Monad.Except       (MonadError (..))
-import           Control.Monad.State        (MonadState (..))
+import           Control.Monad.State        (MonadState (..), modify)
 import           Control.Monad.Identity     (Identity (..))
 import           Control.Monad.Trans.Except (ExceptT)
 import           Control.Monad.Trans.State  (StateT)
@@ -41,17 +64,19 @@ data Error
 
 data Context =
   Ctx { nodes :: HashMap Id Safe.SomeExpr
+      , ports :: HashMap Id Ty
       , wires :: HashMap Id Safe.SomeExpr
       }
 
 instance Semigroup Context where
   (<>) cl cr = Ctx { nodes = Map.union (nodes cl) (nodes cr)
+                   , ports = Map.union (ports cl) (ports cr)
                    , wires = Map.union (wires cl) (wires cr)
                    }
 
 instance Monoid Context where
   mappend = (<>)
-  mempty  = Ctx Map.empty Map.empty
+  mempty  = Ctx Map.empty Map.empty Map.empty
 
 -- singleton :: Id -> Ty -> Context
 -- singleton ident = Ctx . Map.singleton ident
@@ -63,6 +88,13 @@ insertNode ident e ctx =
 -- TODO: this could guarantee thet it is Safe.Expr '(s, n, 'Male)
 lookupNode :: Id -> Context -> Maybe Safe.SomeExpr
 lookupNode ident = Map.lookup ident . nodes
+
+insertPort :: Id -> Ty -> Context -> Context
+insertPort ident t ctx =
+  ctx { ports = Map.insert ident t (ports ctx) }
+
+lookupPort :: Id -> Context -> Maybe Ty
+lookupPort ident = Map.lookup ident . ports
 
 -- Should we go ReaderT and mutate it's context?
 -- Check { runCheck :: ExceptT Error (ReaderT Context IO) a }

@@ -4,8 +4,6 @@
       , TypeInType #-}
 module Firrtl.Lo.TypeCheck.Expr where
 
-import Control.Monad.Except (throwError)
-import Control.Monad.State  (get)
 import Data.Functor.Foldable
 import Data.Singletons
 import Data.Singletons.Decide

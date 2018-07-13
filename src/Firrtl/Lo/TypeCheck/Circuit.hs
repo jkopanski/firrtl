@@ -35,7 +35,23 @@ instance Typed Module where
     Safe.ExtModule ident <$> (traverse typeSafe ports)
 
   typeSafe (Module ident ports body) = do
-    Safe.Module ident <$> traverse typeSafe ports <*> typeSafe body
+    safePorts <- traverse typeSafe ports
+
+    -- imitate Reader local
+    save <- get
+    modify (\s -> foldr addPort s safePorts)
+    -- check module body
+    safeBody <- typeSafe body
+    -- restore the state
+    -- note that we will not restore the env if we fail
+    -- to typecheck, but that is not a problem since
+    -- we want to crash anyway
+    put save
+    pure (Safe.Module ident safePorts safeBody)
+
+      where addPort :: Safe.SomePort -> Context -> Context
+            addPort (Safe.MkSomePort s (Safe.Port ident)) ctx =
+              insertPort ident (FromSing s) ctx
 
 instance Typed Port where
   type TypeSafe Port = Safe.SomePort
