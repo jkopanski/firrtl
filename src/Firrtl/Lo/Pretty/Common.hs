@@ -13,7 +13,7 @@ data Ann
 
 annToAnsiStyle :: Ann -> Terminal.AnsiStyle
 annToAnsiStyle Ground    = Terminal.bold <> Terminal.colorDull Terminal.Green
-annToAnsiStyle Keyword   = Terminal.bold <> Terminal.colorDull Terminal.Green
+annToAnsiStyle Keyword   = Terminal.italicized <> Terminal.colorDull Terminal.Green
 annToAnsiStyle Literal   = Terminal.colorDull Terminal.Magenta
 annToAnsiStyle Reference = Terminal.colorDull Terminal.Blue
 annToAnsiStyle Syntax    = Terminal.bold <> Terminal.colorDull Terminal.Cyan
@@ -25,15 +25,20 @@ literal   = Pretty.annotate Literal
 reference = Pretty.annotate Reference
 syntax    = Pretty.annotate Syntax
 
-comma, langle, rangle, lbrace, rbrace, lbraket, rbraket, lparen, rparen, dot :: Doc Ann
-comma   = syntax Pretty.comma
-langle  = syntax Pretty.langle
-rangle  = syntax Pretty.rangle
-lbrace  = syntax Pretty.lbrace
-rbrace  = syntax Pretty.rbrace
-lbraket = syntax Pretty.lbraket
-rbraket = syntax Pretty.rbraket
-lparen  = syntax Pretty.lparen
-rparen  = syntax Pretty.rparen
-dot     = syntax "."
-  
+comma, langle, rangle, lbrace, rbrace, lbracket, rbracket, lparen, rparen, dot :: Doc Ann
+comma    = syntax Pretty.comma
+langle   = syntax Pretty.langle
+rangle   = syntax Pretty.rangle
+lbrace   = syntax Pretty.lbrace
+rbrace   = syntax Pretty.rbrace
+lbracket = syntax Pretty.lbracket
+rbracket = syntax Pretty.rbracket
+lparen   = syntax Pretty.lparen
+rparen   = syntax Pretty.rparen
+dot      = syntax "."
+
+angles, braces, brackets, parens :: Doc Ann -> Doc Ann
+angles   = Pretty.enclose langle rangle
+braces   = Pretty.enclose lbrace rbrace
+brackets = Pretty.enclose lbracket rbracket
+parens   = Pretty.enclose lparen rparen
