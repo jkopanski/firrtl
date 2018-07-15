@@ -27,7 +27,6 @@ https://blog.jle.im/entry/introduction-to-singletons-1.html
       , UndecidableInstances #-}
 module Firrtl.Lo.Syntax.Safe.Expr
   ( ExprF (..)
-  , Expr (..)
   , SomeExpr (..)
   , TFix (..)
   , fromExpr_
@@ -38,18 +37,21 @@ module Firrtl.Lo.Syntax.Safe.Expr
   , width
   , gender
   -- , module Firrtl.Lo.Syntax.Safe.Types
+
+  -- Fix'd Expr
+  , Expr
+  , mkUInt
+  , mkSInt
+  , mkRef
+  , mkValid
+  , mkMux
   ) where
 
 import Data.Kind (type (*))
 import Data.Singletons
-import Data.Singletons.Prelude.Num (type (+), type (-))
 import Data.Singletons.TH
 import Data.Nat
-import Data.Type.Bool
-import GHC.TypeNats (natVal)
 
-import Data.Monoid     ((<>))
-import Data.Text.Lazy  (Text)
 import Numeric.Natural (Natural)
 
 import Firrtl.Lo.Syntax.Common  (Id)
@@ -58,17 +60,38 @@ import Firrtl.Lo.TypeCheck.Ty
 
 data ExprF :: (Ty -> *) -> Ty -> * where
   -- | Constants
-  UInt :: Natural -> ExprF r '( 'Unsigned, n, 'Male)
-  SInt :: Int     -> ExprF r '( 'Signed,   n, 'Male)
-  Ref  :: Id      -> ExprF r t
+  UInt :: forall (s :: TyRtl) (n :: Nat) (g :: Gender) (t :: Ty) (r :: Ty -> *)
+       .  ( SingI t
+          , t ~ '(s, n, g)
+          , s ~ 'Unsigned
+          , g ~ 'Male
+          )
+       => Natural -> ExprF r t
+
+  SInt :: forall (s :: TyRtl) (n :: Nat) (g :: Gender) (t :: Ty) (r :: Ty -> *)
+       .  ( SingI t
+          , t ~ '(s, n, g)
+          , s ~ 'Signed
+          , g ~ 'Male
+          )
+       => Int     -> ExprF r t
+
+  Ref  :: forall (t :: Ty) (r :: Ty -> *)
+       .  SingI t
+       => Id      -> ExprF r t
 
   -- | Standard expressions
-  Valid :: r '( 'Unsigned, Lit 1, 'Male) -> r t        -> ExprF r t
-  Mux   :: r '( 'Unsigned, Lit 1, 'Male) -> r t -> r t -> ExprF r t
+  Valid :: forall (t :: Ty) (r :: Ty -> *)
+        .  SingI t
+        => r '( 'Unsigned, Lit 1, 'Male) -> r t        -> ExprF r t
+
+  Mux   :: forall (t :: Ty) (r :: Ty -> *)
+        .  SingI t
+        => r '( 'Unsigned, Lit 1, 'Male) -> r t -> r t -> ExprF r t
 
   -- | PrimOps with some complex type expr
   Add :: forall (s1 :: TyRtl) (w1 :: Nat) (s2 :: TyRtl) (w2 :: Nat) (r :: Ty -> *)
-      .  ((NotClock s1 && NotClock s2) ~ 'True)
+      .  (NotClock s1 && NotClock s2) ~ 'True
       => r '(s1, w1, 'Male)
       -> r '(s2, w2, 'Male)
       -> ExprF r (AddTy s1 w1 s2 w2)
@@ -84,17 +107,24 @@ type e :~> f = forall (t :: Ty). e t -> f t
 data SomeExpr :: * where
   MkSomeExpr :: Sing t -> Expr t -> SomeExpr
 
-mkUInt :: Sing n -> Natural -> ExprF r '( 'Unsigned, n, 'Male)
-mkUInt _ = UInt
+mkUInt :: forall (t :: Ty) (n :: Nat)
+       .  t ~ '( 'Unsigned, n, 'Male)
+       => Sing t -> Natural -> Expr t
+mkUInt s n = withSingI s (TFix $ UInt n) 
 
-mkSInt :: Sing n -> Int -> ExprF r '( 'Signed, n, 'Male)
-mkSInt _ = SInt
+mkSInt :: forall (t :: Ty) (n :: Nat)
+       .  t ~ '( 'Signed, n, 'Male)
+       => Sing t -> Int -> Expr t
+mkSInt s n = withSingI s (TFix $ SInt n)
 
-mkRef :: Sing t -> Id -> ExprF r t
-mkRef _ = Ref
+mkRef :: Sing t -> Id -> Expr t
+mkRef s r = withSingI s (TFix $ Ref r)
 
-mkValid :: Sing t -> r '( 'Unsigned, Lit 1, 'Male) -> r t -> ExprF r t
-mkValid _ = Valid
+mkValid :: Sing t -> Expr '( 'Unsigned, Lit 1, 'Male) -> Expr t -> Expr t
+mkValid s c v = withSingI s (TFix $ Valid c v)
+
+mkMux :: Sing t -> Expr '( 'Unsigned, Lit 1, 'Male) -> Expr t -> Expr t -> Expr t
+mkMux s c l r = withSingI s (TFix $ Mux c l r)
 
 fromExpr_ :: Sing t -> Expr t -> SomeExpr
 fromExpr_ = MkSomeExpr
