@@ -29,7 +29,6 @@ module Firrtl.Lo.Syntax.Safe.Expr
   ( ExprF (..)
   , SomeExpr (..)
   , TFix (..)
-  , fromExpr_
   , fromExpr
   , isCond
   , typeOf
@@ -40,11 +39,13 @@ module Firrtl.Lo.Syntax.Safe.Expr
 
   -- Fix'd Expr
   , Expr
-  , mkUInt
-  , mkSInt
-  , mkRef
-  , mkValid
-  , mkMux
+  , fromExpr
+  , fromExpr'
+  -- , mkUInt
+  -- , mkSInt
+  -- , mkRef
+  -- , mkValid
+  -- , mkMux
   ) where
 
 import Data.Kind (type (*))
@@ -102,33 +103,49 @@ type e :~> f = forall (t :: Ty). e t -> f t
 data SomeExpr :: * where
   MkSomeExpr :: Sing t -> Expr t -> SomeExpr
 
-mkUInt :: forall (t :: Ty) (n :: Nat)
-       .  t ~ '( 'Unsigned, n, 'Male)
-       => Sing t -> Natural -> Expr t
-mkUInt s n = withSingI s (TFix $ UInt n) 
+-- mkUInt :: forall (t :: Ty) (n :: Nat)
+--        .  t ~ '( 'Unsigned, n, 'Male)
+--        => Sing t -> Natural -> Expr t
+-- mkUInt s n = withSingI s (TFix $ UInt n) 
 
-mkSInt :: forall (t :: Ty) (n :: Nat)
-       .  t ~ '( 'Signed, n, 'Male)
-       => Sing t -> Int -> Expr t
-mkSInt s n = withSingI s (TFix $ SInt n)
+-- mkSInt :: forall (t :: Ty) (n :: Nat)
+--        .  t ~ '( 'Signed, n, 'Male)
+--        => Sing t -> Int -> Expr t
+-- mkSInt s n = withSingI s (TFix $ SInt n)
 
-mkRef :: Sing t -> Id -> Expr t
-mkRef s r = withSingI s (TFix $ Ref r)
+-- mkRef :: Sing t -> Id -> Expr t
+-- mkRef s r = withSingI s (TFix $ Ref r)
 
-mkValid :: Sing t -> Expr '( 'Unsigned, Lit 1, 'Male) -> Expr t -> Expr t
-mkValid s c v = withSingI s (TFix $ Valid c v)
+-- mkValid :: Sing t -> Expr '( 'Unsigned, Lit 1, 'Male) -> Expr t -> Expr t
+-- mkValid s c v = withSingI s (TFix $ Valid c v)
 
-mkMux :: Sing t -> Expr '( 'Unsigned, Lit 1, 'Male) -> Expr t -> Expr t -> Expr t
-mkMux s c l r = withSingI s (TFix $ Mux c l r)
+-- mkMux :: Sing t -> Expr '( 'Unsigned, Lit 1, 'Male) -> Expr t -> Expr t -> Expr t
+-- mkMux s c l r = withSingI s (TFix $ Mux c l r)
 
-fromExpr_ :: Sing t -> Expr t -> SomeExpr
-fromExpr_ = MkSomeExpr
+-- fromExpr_ :: Sing t -> Expr t -> SomeExpr
+-- fromExpr_ = MkSomeExpr
 
-fromExpr :: SingI t => Expr t -> SomeExpr
-fromExpr = MkSomeExpr sing
+-- fromExpr :: SingI t => Expr t -> SomeExpr
+-- fromExpr = MkSomeExpr sing
 
-fromExpr' :: Expr t -> SomeExpr
-fromExpr' e = _ e
+-- fromExpr' :: Expr t -> SomeExpr
+-- fromExpr' e@(TFix e') = case e' of
+--   UInt s _ -> MkSomeExpr s e
+--   SInt s _ -> MkSomeExpr s e
+--   Ref  s _ -> MkSomeExpr s e
+--   Valid s _ _ -> MkSomeExpr s e
+--   Mux s _ _ _ -> MkSomeExpr s e
+
+fromExpr :: ExprF (TFix ExprF) t -> SomeExpr
+fromExpr e = case e of
+  UInt s _ -> MkSomeExpr s (TFix e)
+  SInt s _ -> MkSomeExpr s (TFix e)
+  Ref  s _ -> MkSomeExpr s (TFix e)
+  Valid s _ _ -> MkSomeExpr s (TFix e)
+  Mux s _ _ _ -> MkSomeExpr s (TFix e)
+
+fromExpr' :: SingI t => Expr t -> SomeExpr
+fromExpr' = MkSomeExpr sing
 
 -- class TFunctor (h :: (Ty s n g -> *) -> Ty s n g -> *) where
 --   tfmap :: (e :~> f) -> h e :~> h f

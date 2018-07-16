@@ -83,7 +83,7 @@ instance Monoid Context where
 
 insertNode :: (SingI s, SingI n) => Id -> Safe.Expr '(s, n, 'Male) -> Context -> Context
 insertNode ident e ctx =
-  ctx { nodes = Map.insert ident (fromExpr e) (nodes ctx) }
+  ctx { nodes = Map.insert ident (fromExpr' e) (nodes ctx) }
 
 -- TODO: this could guarantee thet it is Safe.Expr '(s, n, 'Male)
 lookupNode :: Id -> Context -> Maybe Safe.SomeExpr

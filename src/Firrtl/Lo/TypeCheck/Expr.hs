@@ -37,23 +37,23 @@ alg _ (LitF l) = Right $ case l of
   UInt width value ->
      case someNatVal width of
        SomeSing sn -> let s = STuple3 SUnsigned sn SMale
-                       in Safe.fromExpr_ s (Safe.mkUInt s value)
+                       in Safe.fromExpr (Safe.UInt s value)
 
   SInt width value ->
      case someNatVal width of
        SomeSing sn -> let s = STuple3 SSigned sn SMale
-                       in Safe.fromExpr_ s (Safe.mkSInt s value)
+                       in Safe.fromExpr (Safe.SInt s value)
 
 alg _ (ValidF (Safe.MkSomeExpr sc ec) (Safe.MkSomeExpr ss es)) =
   case sc of
     STuple3 SUnsigned SOne SMale ->
-      Right $ Safe.fromExpr_ ss (Safe.mkValid ss ec es)
+      Right $ Safe.fromExpr (Safe.Valid ss ec es)
     _ ->
       Left $ NoTopModule "test"
 
 alg _ (MuxF (Safe.MkSomeExpr sc ec) (Safe.MkSomeExpr sl el) (Safe.MkSomeExpr sr er)) =
   case sc of
     STuple3 SUnsigned SOne SMale -> case sr %~ sl of
-      Proved Refl -> Right $ Safe.fromExpr_ sl (Safe.mkMux sl ec el er)
+      Proved Refl -> Right $ Safe.fromExpr (Safe.Mux sl ec el er)
       Disproved _ -> Left $ NoTopModule "same type"
     _ -> Left $ NoTopModule "conditional signal"
