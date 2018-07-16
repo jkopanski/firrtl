@@ -61,33 +61,28 @@ import Firrtl.Lo.TypeCheck.Ty
 data ExprF :: (Ty -> *) -> Ty -> * where
   -- | Constants
   UInt :: forall (s :: TyRtl) (n :: Nat) (g :: Gender) (t :: Ty) (r :: Ty -> *)
-       .  ( SingI t
-          , t ~ '(s, n, g)
+       .  ( t ~ '(s, n, g)
           , s ~ 'Unsigned
           , g ~ 'Male
           )
-       => Natural -> ExprF r t
+       => Sing t -> Natural -> ExprF r t
 
   SInt :: forall (s :: TyRtl) (n :: Nat) (g :: Gender) (t :: Ty) (r :: Ty -> *)
-       .  ( SingI t
-          , t ~ '(s, n, g)
+       .  ( t ~ '(s, n, g)
           , s ~ 'Signed
           , g ~ 'Male
           )
-       => Int     -> ExprF r t
+       => Sing t -> Int     -> ExprF r t
 
   Ref  :: forall (t :: Ty) (r :: Ty -> *)
-       .  SingI t
-       => Id      -> ExprF r t
+       .  Sing t -> Id      -> ExprF r t
 
   -- | Standard expressions
   Valid :: forall (t :: Ty) (r :: Ty -> *)
-        .  SingI t
-        => r '( 'Unsigned, Lit 1, 'Male) -> r t        -> ExprF r t
+        .  Sing t -> r '( 'Unsigned, Lit 1, 'Male) -> r t        -> ExprF r t
 
   Mux   :: forall (t :: Ty) (r :: Ty -> *)
-        .  SingI t
-        => r '( 'Unsigned, Lit 1, 'Male) -> r t -> r t -> ExprF r t
+        .  Sing t -> r '( 'Unsigned, Lit 1, 'Male) -> r t -> r t -> ExprF r t
 
   -- | PrimOps with some complex type expr
   Add :: forall (s1 :: TyRtl) (w1 :: Nat) (s2 :: TyRtl) (w2 :: Nat) (r :: Ty -> *)
@@ -131,6 +126,9 @@ fromExpr_ = MkSomeExpr
 
 fromExpr :: SingI t => Expr t -> SomeExpr
 fromExpr = MkSomeExpr sing
+
+fromExpr' :: Expr t -> SomeExpr
+fromExpr' e = _ e
 
 -- class TFunctor (h :: (Ty s n g -> *) -> Ty s n g -> *) where
 --   tfmap :: (e :~> f) -> h e :~> h f
