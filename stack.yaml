@@ -1,7 +1,8 @@
-resolver: nightly-2018-07-06  
+resolver: lts-12.0
 packages:
   - .
 extra-deps:
+  - categories-1.0.7
   - git: https://github.com/jkopanski/singleton-nats.git
     commit: b29b02a77e38fdb0ac0c03401e1f2baa1149457a
 nix:

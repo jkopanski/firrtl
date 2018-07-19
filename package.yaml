@@ -36,9 +36,11 @@ ghc-options:         -Wall
 
 dependencies:
   - base >= 4.11 && < 10
+  - categories
   - formatting
   - megaparsec
   - monads-tf
+  - natural-transformation
   - parsers
   - prettyprinter
   - prettyprinter-ansi-terminal

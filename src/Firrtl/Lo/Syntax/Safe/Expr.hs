@@ -29,24 +29,29 @@ module Firrtl.Lo.Syntax.Safe.Expr
   ( ExprF (..)
   , SomeExpr (..)
   , TFix (..)
-  , fromExpr
   , isCond
   , typeOf
   , tyrtl
   , width
   , gender
-  -- , module Firrtl.Lo.Syntax.Safe.Types
 
   -- Fix'd Expr
   , Expr
   , fromExpr
   , fromExpr'
-  -- , mkUInt
-  -- , mkSInt
-  -- , mkRef
-  -- , mkValid
-  -- , mkMux
+  , mkUInt
+  , mkSInt
+  , mkRef
+  , mkValid
+  , mkMux
+
+  -- Traversals
   ) where
+
+import Prelude hiding ((.), id, Functor (..))
+import qualified Prelude
+import Control.Category
+import Control.Categorical.Functor
 
 import Data.Kind (type (*))
 import Data.Singletons
@@ -61,6 +66,7 @@ import Firrtl.Lo.TypeCheck.Ty
 
 data ExprF :: (Ty -> *) -> Ty -> * where
   -- | Constants
+  --   These are 2 separate constructors, to force UInt value to be a Natural.
   UInt :: forall (s :: TyRtl) (n :: Nat) (g :: Gender) (t :: Ty) (r :: Ty -> *)
        .  ( t ~ '(s, n, g)
           , s ~ 'Unsigned
@@ -92,49 +98,27 @@ data ExprF :: (Ty -> *) -> Ty -> * where
       -> r '(s2, w2, 'Male)
       -> ExprF r (AddTy s1 w1 s2 w2)
 
--- h :: (Ty s n g -> *) -> Ty s n g -> *
--- t :: Ty s n g
-newtype TFix (h :: (Ty -> *) -> Ty -> *) (t :: Ty) =
-  TFix { unTFix :: h (TFix h) t }
-type Expr = TFix ExprF
-
-type e :~> f = forall (t :: Ty). e t -> f t
-
 data SomeExpr :: * where
   MkSomeExpr :: Sing t -> Expr t -> SomeExpr
 
--- mkUInt :: forall (t :: Ty) (n :: Nat)
---        .  t ~ '( 'Unsigned, n, 'Male)
---        => Sing t -> Natural -> Expr t
--- mkUInt s n = withSingI s (TFix $ UInt n) 
+mkUInt :: forall (t :: Ty) (n :: Nat)
+       .  t ~ '( 'Unsigned, n, 'Male)
+       => Sing t -> Natural -> Expr t
+mkUInt s n = TFix (UInt s n)
 
--- mkSInt :: forall (t :: Ty) (n :: Nat)
---        .  t ~ '( 'Signed, n, 'Male)
---        => Sing t -> Int -> Expr t
--- mkSInt s n = withSingI s (TFix $ SInt n)
+mkSInt :: forall (t :: Ty) (n :: Nat)
+       .  t ~ '( 'Signed, n, 'Male)
+       => Sing t -> Int -> Expr t
+mkSInt s i = TFix (SInt s i)
 
--- mkRef :: Sing t -> Id -> Expr t
--- mkRef s r = withSingI s (TFix $ Ref r)
+mkRef :: Sing t -> Id -> Expr t
+mkRef s i = TFix (Ref s i)
 
--- mkValid :: Sing t -> Expr '( 'Unsigned, Lit 1, 'Male) -> Expr t -> Expr t
--- mkValid s c v = withSingI s (TFix $ Valid c v)
+mkValid :: Sing t -> Expr '( 'Unsigned, Lit 1, 'Male) -> Expr t -> Expr t
+mkValid s c v = TFix (Valid s c v)
 
--- mkMux :: Sing t -> Expr '( 'Unsigned, Lit 1, 'Male) -> Expr t -> Expr t -> Expr t
--- mkMux s c l r = withSingI s (TFix $ Mux c l r)
-
--- fromExpr_ :: Sing t -> Expr t -> SomeExpr
--- fromExpr_ = MkSomeExpr
-
--- fromExpr :: SingI t => Expr t -> SomeExpr
--- fromExpr = MkSomeExpr sing
-
--- fromExpr' :: Expr t -> SomeExpr
--- fromExpr' e@(TFix e') = case e' of
---   UInt s _ -> MkSomeExpr s e
---   SInt s _ -> MkSomeExpr s e
---   Ref  s _ -> MkSomeExpr s e
---   Valid s _ _ -> MkSomeExpr s e
---   Mux s _ _ _ -> MkSomeExpr s e
+mkMux :: Sing t -> Expr '( 'Unsigned, Lit 1, 'Male) -> Expr t -> Expr t -> Expr t
+mkMux s c l r = TFix (Mux s c l r)
 
 fromExpr :: ExprF (TFix ExprF) t -> SomeExpr
 fromExpr e = case e of
@@ -146,6 +130,48 @@ fromExpr e = case e of
 
 fromExpr' :: SingI t => Expr t -> SomeExpr
 fromExpr' = MkSomeExpr sing
+
+-- fromExpr'' :: Sing t -> Expr t -> SomeExpr
+-- fromExpr'' = MkSomeExpr
+
+newtype TFix (h :: (Ty -> *) -> Ty -> *) (t :: Ty) =
+  TFix { unTFix :: h (TFix h) t }
+type Expr = TFix ExprF
+
+-- instance Category Ty where
+--   id = Prelude.id
+--   (.) = (Prelude..)
+
+-- newtype TyFunction (a :: Ty) (b :: Ty) =
+--   TyFunction { tyfun :: (Ty, Nat, Gender) -> (Ty, Nat, Gender) }
+
+-- instance Category TyFunction where
+--   id = TyFunction Prelude.id
+--   (.) a b = TyFunction ((Prelude..) (tyfun a) (tyfun b))
+
+-- instance Functor f TyFunction (->) where
+--   fmap = undefined
+
+-- infixr 0 ~~>
+-- type f ~~> g = forall (t :: Ty). f t -> g t
+
+-- infixr 0 :~>, $$
+-- newtype f :~> g = NT { ($$) :: f ~~> g }
+
+-- instance Category (:~>) where
+--   id = NT id
+--   NT f . NT g = NT (f . g)
+
+-- instance Functor ExprF (:~>) (->) where
+--   fmap = undefined
+
+-- type e :~> f = forall t {- (t :: Ty) -} . e t -> f t
+
+-- class HFunctor (h :: (* -> *) -> * -> *) where
+--   hfmap :: (f :~> g) -> h f :~> h g
+
+-- instance HFunctor ExprF where
+--   hfmap f (UInt s n) = UInt s n
 
 -- class TFunctor (h :: (Ty s n g -> *) -> Ty s n g -> *) where
 --   tfmap :: (e :~> f) -> h e :~> h f
