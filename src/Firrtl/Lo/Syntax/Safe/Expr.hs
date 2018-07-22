@@ -46,11 +46,18 @@ module Firrtl.Lo.Syntax.Safe.Expr
   , mkMux
 
   -- Traversals
-  , Functor
+  , TFunctor (..)
+  , I (..)
+  , K (..)
+  , hcata
+
+  -- , Cat (..)
+  -- , Functor (..)
+  -- , NT (..)
   ) where
 
-import Prelude hiding (Functor (fmap), id, (.))
-import Control.Category (Category (id, (.)))
+-- import Prelude hiding (Functor (fmap), id, (.))
+-- import Control.Category (Category (id, (.)))
 
 import Data.Kind (type (*))
 import Data.Singletons
@@ -133,114 +140,79 @@ fromExpr' = MkSomeExpr sing
 -- fromExpr'' :: Sing t -> Expr t -> SomeExpr
 -- fromExpr'' = MkSomeExpr
 
+-- Kinder functor formulation
+-- ripped from https://github.com/rampion/kinder-functor
+-- This won't do as we still had to provide our own recursion-schemes
+-- type family Cat k :: k -> k -> *
+
+-- class (Category (Cat j), Category (Cat k)) => Functor (f :: j -> k) where
+--   fmap :: Cat j a b -> Cat k (f a) (f b)
+
+-- type instance Cat (*) = (->)
+
+-- infixr 0 $$
+
+-- newtype NT (cat :: k -> k -> *) (f :: j -> k) (g :: j -> k) =
+--   NT { ($$) :: forall x. cat (f x) (g x) }
+
+-- instance Category cat => Category (NT cat) where
+--   id = NT id
+--   NT a . NT b = NT (a . b) 
+
+-- type instance Cat (j -> k) = NT (Cat k)
+
+-- data CTy (a :: Ty) (b :: Ty) where
+--   CId :: CTy a a
+--   -- CF  :: CTy a b -> a -> b -> CTy a b
+--   CC  :: forall (a :: Ty) (b :: Ty) (c :: Ty). CTy b c -> CTy a b -> CTy a c
+
+-- type instance Cat Ty = CTy
+
+-- instance Category CTy where
+--   id = CId
+--   (.) = CC
+
+-- instance Functor (CTy a) where
+--   fmap = (.)
+
+-- instance (Category cat, Cat k ~ cat) => Functor (NT cat f) where
+--   fmap = (.)
+
+-- instance Functor NT where
+--   fmap h = NT $ NT $ \(NT h') -> NT $ (($$) h) $$ h'
+
+-- instance Functor ExprF where
+--   fmap (NT h) = NT $ \ex -> case ex of
+--     UInt s n -> UInt s n
+--     SInt s i -> SInt s i
+--     Ref  s i -> Ref  s i
+--     Valid s cond a -> Valid s (h cond) (h a)
+--     Mux s cond a b -> Mux s (h cond) (h a) (h b)
+
+  
 newtype TFix (h :: (Ty -> *) -> Ty -> *) (t :: Ty) =
   TFix { unTFix :: h (TFix h) t }
 type Expr = TFix ExprF
 
--- instance Category Ty where
---   id = Prelude.id
---   (.) = (Prelude..)
+type f :~> g = forall a. f a -> g a
 
--- newtype TyFunction (a :: Ty) (b :: Ty) =
---   TyFunction { tyfun :: (Ty, Nat, Gender) -> (Ty, Nat, Gender) }
+class TFunctor (h :: (Ty -> *) -> Ty -> *) where
+  tfmap :: (e :~> f) -> h e :~> h f
 
--- instance Category TyFunction where
---   id = TyFunction Prelude.id
---   (.) a b = TyFunction ((Prelude..) (tyfun a) (tyfun b))
+instance TFunctor ExprF where
+  tfmap _ (UInt s n) = UInt s n
+  tfmap _ (SInt s i) = SInt s i
+  tfmap _ (Ref  s i) = Ref  s i
+  tfmap f (Valid s cond sig) = Valid s (f cond) (f sig)
+  tfmap f (Mux   s cond a b) = Mux s (f cond) (f a) (f b)
 
--- instance Functor f TyFunction (->) where
---   fmap = undefined
+hcata :: TFunctor h => (h f :~> f) -> TFix h :~> f
+hcata alg = alg . tfmap (hcata alg) . unTFix
 
--- infixr 0 ~~>
--- type f ~~> g = forall (t :: Ty). f t -> g t
-
--- infixr 0 :~>, $$
--- newtype f :~> g = NT { ($$) :: f ~~> g }
-
--- instance Category (:~>) where
---   id = NT id
---   NT f . NT g = NT (f . g)
-
--- instance Functor ExprF (:~>) (->) where
---   fmap = undefined
-
--- type e :~> f = forall t {- (t :: Ty) -} . e t -> f t
-
--- class HFunctor (h :: (* -> *) -> * -> *) where
---   hfmap :: (f :~> g) -> h f :~> h g
-
--- instance HFunctor ExprF where
---   hfmap f (UInt s n) = UInt s n
-
-
--- Kinder functor formulation
--- ripped from https://github.com/rampion/kinder-functor
-type family Cat k :: k -> k -> *
-
-class (Category (Cat j), Category (Cat k)) => Functor (f :: j -> k) where
-  fmap :: Cat j a b -> Cat k (f a) (f b)
-
-type instance Cat (*) = (->)
-
-infixr 0 $$
-
-newtype NT (cat :: k -> k -> *) (f :: j -> k) (g :: j -> k) =
-  NT { ($$) :: forall x. cat (f x) (g x) }
-
-instance Category cat => Category (NT cat) where
-  id = NT id
-  NT a . NT b = NT (a . b) 
-
-type instance Cat (j -> k) = NT (Cat k)
-
-data CTy (a :: Ty) (b :: Ty) where
-  CId :: CTy a a
-  -- CF  :: CTy a b -> a -> b -> CTy a b
-  CC  :: forall (a :: Ty) (b :: Ty) (c :: Ty). CTy b c -> CTy a b -> CTy a c
-
-type instance Cat Ty = CTy
-
-instance Category CTy where
-  id = CId
-  (.) = CC
-
-instance Functor (CTy a) where
-  fmap = (.)
-
-instance (Category cat, Cat k ~ cat) => Functor (NT cat f) where
-  fmap = (.)
-
-instance Functor NT where
-  fmap h = NT $ NT $ \(NT h') -> NT $ (($$) h) $$ h'
-
-instance Functor ExprF where
-  fmap (NT h) = NT $ \ex -> case ex of
-    UInt s n -> UInt s n
-    SInt s i -> SInt s i
-    Ref  s i -> Ref  s i
-    Valid s cond a -> Valid s (h cond) (h a)
-    Mux s cond a b -> Mux s (h cond) (h a) (h b)
-    -- Valid s cond a -> Valid (( fmap h ) cond) (( fmap h ) a) -- fmap h _  -- (fmap a)
-    -- -- where g :: ExprF a t -> ExprF b t
-         --  UInt (STuple3 SUnsigned SZ SMale) 1
-  
-
---   fmap CId t = t
---   fmap CC a = CC . a
-
--- class TFunctor (h :: (Ty s n g -> *) -> Ty s n g -> *) where
---   tfmap :: (e :~> f) -> h e :~> h f
-
--- instance TFunctor ExprF where
---   tfmap _ (Lit l) = Lit l
---   tfmap _ (Ref n) = Ref n
---   tfmap f (Valid cond sig) = Valid (f cond) (f sig)
-
--- hcata :: TFunctor h => (h f :~> f) -> TFix h :~> f
--- hcata alg = alg . tfmap (hcata alg) . unTFix
-
--- newtype K x (t :: Ty s n g) = K { unK :: x }
-
+-- Const and Identity functors for Ty kind
+newtype K x (t :: Ty) = K { unK :: x }
+newtype I x = I { unI :: x }
+ 
 -- prettyExpr :: Expr ('TyRtl s n g) -> Doc Ann
 -- prettyExpr = unK . hcata alg
 
