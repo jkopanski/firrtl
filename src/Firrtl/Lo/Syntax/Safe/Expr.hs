@@ -213,37 +213,6 @@ hcata alg = alg . tfmap (hcata alg) . unTFix
 newtype K x (t :: Ty) = K { unK :: x }
 newtype I x = I { unI :: x }
  
--- prettyExpr :: Expr ('TyRtl s n g) -> Doc Ann
--- prettyExpr = unK . hcata alg
-
--- alg :: ExprF (K (Doc Ann)) ('TyRtl s n g) -> K (Doc Ann) ('TyRtl s n g)
--- alg (Lit l) = K $ prettyLit l
--- alg (Ref r) = K $ prettyRef r
--- alg (Valid cond sig) =
---   let op   = Pretty.pretty ("validif" :: Text)
---       args = Pretty.parens . Pretty.hsep . Pretty.punctuate Pretty.comma
---    in K $ op <> args [unK cond, unK sig]
-
--- prettyLit :: Lit ('TyRtl s n g) -> Doc Ann
--- prettyLit l = case l of
---   SInt v -> plit "SInt" <> wid (width $ Lit l) <> val v
---   UInt v -> plit "UInt" <> wid (width $ Lit l) <> val v
---   where
---     plit :: Text -> Doc Ann
---     plit t = Pretty.pretty t
---     val :: Pretty a => a -> Doc Ann
---     val = Pretty.parens . Pretty.pretty
---     wid :: Natural -> Doc Ann
---     wid = Pretty.angles . Pretty.pretty
-
--- prettyRef :: Ref ('TyRtl s n g) -> Doc Ann
--- prettyRef (Reference name) = Pretty.pretty name
-
--- data Ann
---   = Ground
---   | Keyword
---   | Operator
-
 isCond :: SomeExpr -> Bool
 isCond expr = case typeOf expr of
   (Unsigned, 1, Male) -> True

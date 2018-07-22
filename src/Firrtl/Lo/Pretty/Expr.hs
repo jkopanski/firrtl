@@ -29,6 +29,8 @@ prettyExprAlg (SInt (STuple3 _ n _) u) = K $
   keyword "SInt" <> angles (Pretty.pretty (nat (fromSing n)))
                  <> parens (literal $ Pretty.pretty u)
 
+prettyExprAlg (Ref s id) = K $ reference $ Pretty.pretty id
+
 prettyExprAlg (Valid s cond signal) = K $
   keyword "validif" <> parens (unK cond <> comma <> unK signal)
 
