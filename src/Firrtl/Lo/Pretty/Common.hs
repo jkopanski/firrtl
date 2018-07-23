@@ -1,8 +1,17 @@
+{-# language
+        DataKinds
+      , TypeInType #-}
 module Firrtl.Lo.Pretty.Common where
+
+import           Data.Nat
+import           Data.Singletons.Prelude
+import           Data.Singletons.Prelude.Tuple
 
 import           Data.Text.Prettyprint.Doc                 (Doc)
 import qualified Data.Text.Prettyprint.Doc                 as Pretty
 import qualified Data.Text.Prettyprint.Doc.Render.Terminal as Terminal
+
+import Firrtl.Lo.TypeCheck.Ty
 
 data Ann
   = Ground   -- ^ Ground types
@@ -42,3 +51,14 @@ angles   = Pretty.enclose langle rangle
 braces   = Pretty.enclose lbrace rbrace
 brackets = Pretty.enclose lbracket rbracket
 parens   = Pretty.enclose lparen rparen
+
+prettyTy :: forall (t :: Ty). Sing t -> Doc Ann
+prettyTy (STuple3 t n _) =
+  let ty = keyword $ case t of
+        SClock    -> "Clock"
+        SSigned   -> "SInt"
+        SUnsigned -> "UInt"
+      width = angles $ Pretty.pretty $ nat (fromSing n)
+   in ty <> case t of
+              SClock -> mempty
+              _      -> width

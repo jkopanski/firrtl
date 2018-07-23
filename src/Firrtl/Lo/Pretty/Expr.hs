@@ -2,11 +2,9 @@
         DataKinds
       , TypeInType #-}
 module Firrtl.Lo.Pretty.Expr
-  ( prettyExpr ) where
+  ( pretty ) where
 
-import           Data.Functor.Foldable
 import           Data.Kind (type (*))
-import           Data.Nat
 import           Data.Singletons
 import           Data.Singletons.Prelude.Tuple
 import           Data.Text.Prettyprint.Doc (Doc)
@@ -14,11 +12,11 @@ import qualified Data.Text.Prettyprint.Doc as Pretty
 
 import Firrtl.Lo.Pretty.Common
 import Firrtl.Lo.Syntax.Safe.Expr
-import Firrtl.Lo.TypeCheck.Ty (Gender (..), Ty, TyRtl (..), nat)
+import Firrtl.Lo.TypeCheck.Ty     (Ty, nat)
 
 
-prettyExpr :: forall (t :: Ty). Expr t -> Doc Ann
-prettyExpr = unK . hcata prettyExprAlg
+pretty :: forall (t :: Ty). Expr t -> Doc Ann
+pretty = unK . hcata prettyExprAlg
 
 prettyExprAlg :: forall (t :: Ty). ExprF (K (Doc Ann)) t -> K (Doc Ann) t
 prettyExprAlg (UInt (STuple3 _ n _) u) = K $
