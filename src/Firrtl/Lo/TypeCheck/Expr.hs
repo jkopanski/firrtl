@@ -5,6 +5,7 @@
 module Firrtl.Lo.TypeCheck.Expr where
 
 import Data.Functor.Foldable
+import Data.Maybe              (fromMaybe)
 import Data.Singletons
 import Data.Singletons.Decide
 import Data.Singletons.Prelude hiding (Error)
@@ -33,16 +34,26 @@ alg ctx (RefF ident) =
         Just expr -> Right expr
         Nothing   -> Left $ NotInScope ident Nothing
 
-alg _ (LitF l) = Right $ case l of
-  UInt width value ->
-     case someNatVal width of
-       SomeSing sn -> let s = STuple3 SUnsigned sn SMale
-                       in Safe.fromExpr (Safe.UInt s value)
+alg _ (LitF l) = case l of
+  UInt mwidth value ->
+    let minWidth = minUIntBitWidth value
+        width = fromMaybe minWidth mwidth
+     in if minWidth > width
+           then Left $ NotEnoughWidth l minWidth 
+           else Right $ case someNatVal width of
+                        SomeSing sn ->
+                          let s = STuple3 SUnsigned sn SMale
+                           in Safe.fromExpr (Safe.UInt s value)
 
-  SInt width value ->
-     case someNatVal width of
-       SomeSing sn -> let s = STuple3 SSigned sn SMale
-                       in Safe.fromExpr (Safe.SInt s value)
+  SInt mwidth value ->
+    let minWidth = minSIntBitWidth value
+        width = fromMaybe minWidth mwidth
+     in if minWidth > width
+           then Left $ NotEnoughWidth l minWidth 
+           else Right $ case someNatVal width of
+                        SomeSing sn ->
+                          let s = STuple3 SSigned sn SMale
+                           in Safe.fromExpr (Safe.SInt s value)
 
 alg _ (ValidF (Safe.MkSomeExpr sc ec) (Safe.MkSomeExpr ss es)) =
   case sc of
@@ -57,3 +68,20 @@ alg _ (MuxF (Safe.MkSomeExpr sc ec) (Safe.MkSomeExpr sl el) (Safe.MkSomeExpr sr 
       Proved Refl -> Right $ Safe.fromExpr (Safe.Mux sl ec el er)
       Disproved _ -> Left $ NoTopModule "same type"
     _ -> Left $ NoTopModule "conditional signal"
+
+minUIntBitWidth :: Natural -> Natural
+minUIntBitWidth = (+) 1
+            . fromIntegral
+            . (floor :: Double -> Int)
+            . logBase 2
+            . fromIntegral
+
+minSIntBitWidth :: Int -> Natural
+minSIntBitWidth x | x > 0 = 1 + minUIntBitWidth (fromIntegral x)
+                  | otherwise = ( (+) 1
+                                . fromIntegral
+                                . (ceiling :: Double -> Int)
+                                . logBase 2
+                                . abs
+                                . fromIntegral
+                                ) x

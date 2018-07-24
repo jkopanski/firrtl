@@ -28,7 +28,7 @@ exprParserTests = testParser "expression parser tests" $ do
     it "unsigned" $
       parseExpr "UInt<4>(10)"
       `shouldParse`
-      Expr.Lit (Expr.UInt 4 10)
+      Expr.Lit (Expr.UInt (Just 4) 10)
 
     it "invlid unsigned" $
       parseExpr
@@ -38,57 +38,57 @@ exprParserTests = testParser "expression parser tests" $ do
     it "signed pos" $
       parseExpr "SInt<5>(23)"
       `shouldParse`
-      Expr.Lit (Expr.SInt 5 23)
+      Expr.Lit (Expr.SInt (Just 5) 23)
 
     it "signed neg" $
-      parseExpr "SInt<6>(-14)"
+      parseExpr "SInt(-14)"
       `shouldParse`
-      Expr.Lit (Expr.SInt 6 (-14))
+      Expr.Lit (Expr.SInt Nothing (-14))
 
     describe "other literals" $ do
       it "unsigned pos hex" $
-        parseExpr "UInt<8>(\"hFe\")"
+        parseExpr "UInt(\"hFe\")"
         `shouldParse`
-        Expr.Lit (Expr.UInt 8 254)
+        Expr.Lit (Expr.UInt Nothing 254)
 
       it "unsinged pos oct" $
         parseExpr "UInt<16>(\"o17\")"
         `shouldParse`
-        Expr.Lit (Expr.UInt 16 15)
+        Expr.Lit (Expr.UInt (Just 16) 15)
 
       it "unsinged pos bin" $
-        parseExpr "UInt<4>(\"b1101\")"
+        parseExpr "UInt(\"b1101\")"
         `shouldParse`
-        Expr.Lit (Expr.UInt 4 13)
+        Expr.Lit (Expr.UInt Nothing 13)
 
       it "signed neg hex" $
         parseExpr "SInt<9>(\"-hFe\")"
         `shouldParse`
-        Expr.Lit (Expr.SInt 9 (-254))
+        Expr.Lit (Expr.SInt (Just 9) (-254))
 
       it "unsinged neg oct" $
         parseExpr "SInt<17>(\"-o17\")"
         `shouldParse`
-        Expr.Lit (Expr.SInt 17 (-15))
+        Expr.Lit (Expr.SInt (Just 17) (-15))
 
       it "unsinged pos bin" $
-        parseExpr "SInt<5>(\"-b1101\")"
+        parseExpr "SInt(\"-b1101\")"
         `shouldParse`
-        Expr.Lit (Expr.SInt 5 (-13))
+        Expr.Lit (Expr.SInt Nothing (-13))
 
   describe "conditional & multiplexor" $ do
     it "validif" $
-      parseExpr "validif(UInt<1>(1), a)"
+      parseExpr "validif(UInt(1), a)"
       `shouldParse`
       Expr.Valid
-        (Expr.Lit (Expr.UInt 1 1))
+        (Expr.Lit (Expr.UInt Nothing 1))
         (Expr.Ref "a")
 
     it "mux" $
-      parseExpr "mux(UInt<1>(1), a, b)"
+      parseExpr "mux(UInt(1), a, b)"
       `shouldParse`
       Expr.Mux
-        (Expr.Lit (Expr.UInt 1 1))
+        (Expr.Lit (Expr.UInt Nothing 1))
         (Expr.Ref "a")
         (Expr.Ref "b")
 

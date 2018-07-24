@@ -60,6 +60,7 @@ data Error
   | Connectable Ty Ty
   | Containable Ty Ty
   | Equivalent Ty Ty
+  | NotEnoughWidth Literal N.Natural
   deriving Show
 
 data Context =

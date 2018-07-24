@@ -113,14 +113,12 @@ indentedItem :: (MonadParsec e s m, Token s ~ Char)
   -> m b
 indentedItem ref sc p = Text.Megaparsec.Char.Lexer.indentGuard sc EQ ref *> p
 
--- FIXME: convert ConnType -> Ty
 port :: (Monad m, TokenParsing m) => m Port
 port = do
   gender <- direction
   name <- identifier
   _ <- symbolic ':'
-  ty <- typeDecl
-  width <- size
+  (ty, width) <- sizedType
   pure $ Port name (ty, width, gender)
 
 direction :: (Monad m, TokenParsing m) => m Gender

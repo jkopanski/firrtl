@@ -20,16 +20,16 @@ parseCirc = parse Firrtl.Lo.Parser.Circuit.circuit
 
 ex00 :: Text -> Module
 ex00 name = Syntax.ExtModule name
-  [ Syntax.Port "a"   (Unsigned, 5, Female)
-  , Syntax.Port "b"   (Signed,   1, Male)
-  , Syntax.Port "clk" (Clock,    1, Female)
+  [ Syntax.Port "a"   (Unsigned, 5, Male)
+  , Syntax.Port "b"   (Signed,   1, Female)
+  , Syntax.Port "clk" (Clock,    1, Male)
   ]
 
 ex01 :: Text -> Module
 ex01 name = Syntax.Module name
-  [ Syntax.Port "a"   (Unsigned, 5, Female)
-  , Syntax.Port "b"   (Signed,   1, Male)
-  , Syntax.Port "clk" (Clock,    1, Female)
+  [ Syntax.Port "a"   (Unsigned, 5, Male)
+  , Syntax.Port "b"   (Signed,   1, Female)
+  , Syntax.Port "clk" (Clock,    1, Male)
   ]
   (Syntax.Block [Syntax.Empty])
 

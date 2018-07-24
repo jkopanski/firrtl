@@ -145,14 +145,14 @@ value = fromInteger <$> integer
 unsignedLit :: (Monad m, TokenParsing m) => m Literal
 unsignedLit = do
   reserved "UInt"
-  size <- size
+  msize <- optional size
   val <- fromInteger <$> parens (decimal <|> (stringLiteral >> (hexadecimal <|> octal <|> binary)))
-  pure (UInt size val)
+  pure (UInt msize val)
 
 signedLit :: (Monad m, TokenParsing m) => m Literal
 signedLit = do
   reserved "SInt"
   -- TODO: use width hint
-  size <- size
+  msize <- optional size
   val <- fromInteger <$> parens (integer <|> (stringLiteral >> (hexadecimal <|> octal <|> binary)))
-  pure (SInt size val)
+  pure (SInt msize val)

@@ -25,7 +25,7 @@ stmtParserTests = testParser "statemet parser tests" $ do
       `shouldParse`
       Syntax.Connect
         (Syntax.Ref "somenode")
-        (Syntax.Lit (Syntax.UInt 4 15))
+        (Syntax.Lit (Syntax.UInt (Just 4) 15))
 
     it "partial" pending
       -- parseStmt "somenode <- SInt(-2)"
@@ -47,41 +47,41 @@ stmtParserTests = testParser "statemet parser tests" $ do
   it "node" $
     parseStmt "node a = UInt<4>(15)"
     `shouldParse`
-    Syntax.Node "a" (Syntax.Lit (Syntax.UInt 4 15))
+    Syntax.Node "a" (Syntax.Lit (Syntax.UInt (Just 4) 15))
 
   describe "printfs" $ do
     it "without optional args" $
-      parseStmt "printf(UInt<1>(1), UInt<1>(1), \"Test\")"
+      parseStmt "printf(UInt(1), UInt(1), \"Test\")"
       `shouldParse`
-      Syntax.Print (Syntax.Lit (Syntax.UInt 1 1))
-                   (Syntax.Lit (Syntax.UInt 1 1))
+      Syntax.Print (Syntax.Lit (Syntax.UInt Nothing 1))
+                   (Syntax.Lit (Syntax.UInt Nothing 1))
                    "Test"
                    []
 
     it "with 1 optional arg" $
-      parseStmt "printf(UInt<1>(1), UInt<1>(1), \"Test %d\", UInt<2>(2))"
+      parseStmt "printf(UInt(1), UInt<1>(1), \"Test %d\", UInt<2>(2))"
       `shouldParse`
-      Syntax.Print (Syntax.Lit (Syntax.UInt 1 1))
-                   (Syntax.Lit (Syntax.UInt 1 1))
+      Syntax.Print (Syntax.Lit (Syntax.UInt Nothing 1))
+                   (Syntax.Lit (Syntax.UInt (Just 1) 1))
                    "Test %d"
-                   [Syntax.Lit (Syntax.UInt 2 2)]
+                   [Syntax.Lit (Syntax.UInt (Just 2) 2)]
 
     it "with multiple optional arg" $
-      parseStmt "printf(UInt<1>(1), UInt<1>(1), \"Test %d %d %d\", UInt<2>(2), UInt<4>(15), SInt<4>(-3))"
+      parseStmt "printf(UInt(1), UInt(1), \"Test %d %d %d\", UInt<2>(2), UInt<4>(15), SInt<4>(-3))"
       `shouldParse`
-      Syntax.Print (Syntax.Lit (Syntax.UInt 1 1))
-                   (Syntax.Lit (Syntax.UInt 1 1))
+      Syntax.Print (Syntax.Lit (Syntax.UInt Nothing 1))
+                   (Syntax.Lit (Syntax.UInt Nothing 1))
                    "Test %d %d %d"
-                   [ Syntax.Lit (Syntax.UInt 2 2)
-                   , Syntax.Lit (Syntax.UInt 4 15)
-                   , Syntax.Lit (Syntax.SInt 4 (-3))
+                   [ Syntax.Lit (Syntax.UInt (Just 2) 2)
+                   , Syntax.Lit (Syntax.UInt (Just 4) 15)
+                   , Syntax.Lit (Syntax.SInt (Just 4) (-3))
                    ]
 
     it "stop" $
       parseStmt "stop(UInt<2>(2), UInt<4>(13), -4)"
       `shouldParse`
-      Syntax.Stop (Syntax.Lit (Syntax.UInt 2 2))
-                  (Syntax.Lit (Syntax.UInt 4 13))
+      Syntax.Stop (Syntax.Lit (Syntax.UInt (Just 2) 2))
+                  (Syntax.Lit (Syntax.UInt (Just 4) 13))
                   (-4)
 
     describe "wires" $ do
