@@ -27,7 +27,8 @@ stmtParserTests = testParser "statemet parser tests" $ do
         (Syntax.Ref "somenode")
         (Syntax.Lit (Syntax.UInt (Just 4) 15))
 
-    it "partial" pending
+    -- no partials for lowered form
+    -- it "partial" pending
       -- parseStmt "somenode <- SInt(-2)"
       -- `shouldParse`
       -- Syntax.Partial
