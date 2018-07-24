@@ -17,9 +17,9 @@ stmt = empty
    <|> node
    <|> print
    <|> stop
-   -- <|> wire
+   <|> wire
 
-block, empty, node, print, stop -- , wire
+block, empty, node, print, stop, wire
   :: (Monad m, TokenParsing m) => m Stmt
 block = Block <$> some stmt
 empty = reserved "skip" $> Empty <?> "empty statement"
@@ -39,7 +39,8 @@ stop = Stop
    <*> (comma *> expr <?> "halt condition signal")
    <*> (comma *> (fromIntegral <$> integer) <* symbolic ')' <?> "exit code")
 
--- wire = reserved "wire" *> (Wire <$> (identifier <* symbolic ':') <*> typeDecl)
+wire = reserved "wire" *> (Wire <$> (identifier <* symbolic ':')
+                                <*> ((,,) <$> typeDecl <*> size <*> pure Bi))
 
 -- ^ statements which are starting with expression
 -- | combined to single function to avoid backtracking

@@ -13,23 +13,23 @@ import Firrtl.Lo.Syntax (Circuit, Module)
 import qualified Firrtl.Lo.Syntax as Syntax
 import qualified Firrtl.Lo.Parser
 import qualified Firrtl.Lo.Parser.Circuit
-import qualified Firrtl.Lo.TypeCheck.Types as Types
+import Firrtl.Lo.TypeCheck.Ty -- pes as Types
 
 parseCirc :: Text -> Either (ParseError Char Void) Circuit
 parseCirc = parse Firrtl.Lo.Parser.Circuit.circuit
 
 ex00 :: Text -> Module
 ex00 name = Syntax.ExtModule name
-  [ Syntax.Port "a"   (Types.ConnType Types.Female (Types.Unsigned 5))
-  , Syntax.Port "b"   (Types.ConnType Types.Male   (Types.Signed   1))
-  , Syntax.Port "clk" (Types.ConnType Types.Female  Types.Clock)
+  [ Syntax.Port "a"   (Unsigned, 5, Female)
+  , Syntax.Port "b"   (Signed,   1, Male)
+  , Syntax.Port "clk" (Clock,    1, Female)
   ]
 
 ex01 :: Text -> Module
 ex01 name = Syntax.Module name
-  [ Syntax.Port "a"   (Types.ConnType Types.Female (Types.Unsigned 5))
-  , Syntax.Port "b"   (Types.ConnType Types.Male   (Types.Signed   1))
-  , Syntax.Port "clk" (Types.ConnType Types.Female  Types.Clock)
+  [ Syntax.Port "a"   (Unsigned, 5, Female)
+  , Syntax.Port "b"   (Signed,   1, Male)
+  , Syntax.Port "clk" (Clock,    1, Female)
   ]
   (Syntax.Block [Syntax.Empty])
 
