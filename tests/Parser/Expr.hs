@@ -62,17 +62,17 @@ exprParserTests = testParser "expression parser tests" $ do
         Expr.Lit (Expr.UInt Nothing 13)
 
       it "signed neg hex" $
-        parseExpr "SInt<9>(\"-hFe\")"
+        parseExpr "SInt<9>(\"h-Fe\")"
         `shouldParse`
         Expr.Lit (Expr.SInt (Just 9) (-254))
 
       it "unsinged neg oct" $
-        parseExpr "SInt<17>(\"-o17\")"
+        parseExpr "SInt<17>(\"o-17\")"
         `shouldParse`
         Expr.Lit (Expr.SInt (Just 17) (-15))
 
       it "unsinged pos bin" $
-        parseExpr "SInt(\"-b1101\")"
+        parseExpr "SInt(\"b-1101\")"
         `shouldParse`
         Expr.Lit (Expr.SInt Nothing (-13))
 
