@@ -4,6 +4,7 @@ import Prelude hiding (readFile)
 import           Data.Text.Lazy.IO   (readFile)
 import           Options.Applicative (execParser)
 import qualified Firrtl.Lo.Parser    as Parser
+import qualified Firrtl.Lo.Syntax    as Syntax
 import qualified Firrtl.Lo.TypeCheck as Check
 import qualified Text.Megaparsec
 
@@ -16,8 +17,9 @@ main = do
   text <- readFile fname
   ast <- case Parser.parse fname text of
     Left e -> fail $ Text.Megaparsec.parseErrorPretty' text e
-    Right ast -> pure ast
+    Right (Syntax.Top ast) -> pure ast
 
+  print ast
   case Check.check ast of
     Right _  -> pure ()
     Left err -> fail $ show err

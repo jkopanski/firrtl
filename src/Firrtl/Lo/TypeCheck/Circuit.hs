@@ -31,11 +31,11 @@ instance Typed Module where
   type TypeSafe Module = Safe.Module
 
   typeSafe :: Module -> Check Safe.Module
-  typeSafe (ExtModule ident ports) =
-    Safe.ExtModule ident <$> (traverse typeSafe ports)
+  typeSafe (ExtModule ident ps) =
+    Safe.ExtModule ident <$> (traverse typeSafe ps)
 
-  typeSafe (Module ident ports body) = do
-    safePorts <- traverse typeSafe ports
+  typeSafe (Module ident ps body) = do
+    safePorts <- traverse typeSafe ps
 
     -- imitate Reader local
     save <- get
@@ -50,8 +50,8 @@ instance Typed Module where
     pure (Safe.Module ident safePorts safeBody)
 
       where addPort :: Safe.SomePort -> Context -> Context
-            addPort (Safe.MkSomePort s (Safe.Port ident)) ctx =
-              insertPort ident (FromSing s) ctx
+            addPort (Safe.MkSomePort s (Safe.Port name)) ctx =
+              insertPort name (FromSing s) ctx
 
 instance Typed Port where
   type TypeSafe Port = Safe.SomePort
