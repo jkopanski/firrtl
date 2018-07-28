@@ -1,4 +1,5 @@
 {-# LANGUAGE CPP #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 {- Rip off from mtl to play nicely with monads-tf -}
 {- |
 Module      :  Control.Monad.Except

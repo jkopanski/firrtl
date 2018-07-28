@@ -5,7 +5,6 @@ module Firrtl.Lo.Pretty.Common where
 
 import           Data.Nat
 import           Data.Singletons.Prelude
-import           Data.Singletons.Prelude.Tuple
 
 import           Data.Text.Prettyprint.Doc                 (Doc)
 import qualified Data.Text.Prettyprint.Doc                 as Pretty

@@ -19,6 +19,7 @@ Type is a triple, cointaining:
       , TypeFamilies
       , TypeOperators
       , UndecidableInstances #-}
+{-# OPTIONS_GHC -fno-warn-missing-pattern-synonym-signatures #-}
 module Firrtl.Lo.TypeCheck.Ty where
 
 import Data.Singletons.TH
