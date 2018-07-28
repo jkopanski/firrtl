@@ -1,6 +1,4 @@
-{-# language
-        DataKinds
-      , TypeInType #-}
+{-# language TypeInType #-}
 module Firrtl.Lo.Syntax.Safe.Circuit where
 
 import Data.Kind          (type (*))

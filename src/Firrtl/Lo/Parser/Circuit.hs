@@ -6,7 +6,6 @@ import Control.Applicative      ((<|>))
 import Data.Functor             (($>))
 import Data.List.NonEmpty       (fromList)
 import Data.Maybe               (fromMaybe)
-import Firrtl.Lo.Parser.Expr
 import Firrtl.Lo.Parser.Monad
 import Firrtl.Lo.Parser.Stmt
 import Firrtl.Lo.Syntax
@@ -35,15 +34,15 @@ data ModuleType = Standard | External
 mod :: Parser Module
 mod = do
   space
-  ref <- Text.Megaparsec.Char.Lexer.indentLevel
+  reflvl <- Text.Megaparsec.Char.Lexer.indentLevel
   moduleType <- reserved "module" $> Standard
             <|> reserved "extmodule" $> External
   name <- (identifier <?> "module name") <* symbolic ':'
 
   -- grab indentation level
-  lvl <- Text.Megaparsec.Char.Lexer.indentGuard space GT ref
+  lvl <- Text.Megaparsec.Char.Lexer.indentGuard space GT reflvl
   -- get ports
-  miface <- optional $ indentedItems ref lvl space port
+  miface <- optional $ indentedItems reflvl lvl space port
   -- top level modules won't have any I/O
   let iface = fromMaybe [] miface
 
@@ -51,7 +50,7 @@ mod = do
     External -> pure (ExtModule name iface)
     Standard ->
       -- grab module body using same indentation level as ports
-      Module name iface . Block <$> indentedItems ref lvl space stmt
+      Module name iface . Block <$> indentedItems reflvl lvl space stmt
 
 indentedItems
   :: MonadParsec e s m

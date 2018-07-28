@@ -14,15 +14,9 @@ https://blog.jle.im/entry/fixed-length-vector-types-in-haskell.html
 https://blog.jle.im/entry/introduction-to-singletons-1.html
 |-}
 {-# language
-        DataKinds
-      , EmptyCase
-      , FlexibleInstances
-      , GADTs
-      , KindSignatures
+        EmptyCase
       , PolyKinds
       , ScopedTypeVariables
-      , TypeFamilies
-      , TypeOperators
       , TypeInType
       , UndecidableInstances #-}
 module Firrtl.Lo.Syntax.Safe.Expr
@@ -50,14 +44,7 @@ module Firrtl.Lo.Syntax.Safe.Expr
   , I (..)
   , K (..)
   , hcata
-
-  -- , Cat (..)
-  -- , Functor (..)
-  -- , NT (..)
   ) where
-
--- import Prelude hiding (Functor (fmap), id, (.))
--- import Control.Category (Category (id, (.)))
 
 import Data.Kind (type (*))
 import Data.Singletons
@@ -137,59 +124,6 @@ fromExpr e = case e of
 fromExpr' :: SingI t => Expr t -> SomeExpr
 fromExpr' = MkSomeExpr sing
 
--- fromExpr'' :: Sing t -> Expr t -> SomeExpr
--- fromExpr'' = MkSomeExpr
-
--- Kinder functor formulation
--- ripped from https://github.com/rampion/kinder-functor
--- This won't do as we still had to provide our own recursion-schemes
--- type family Cat k :: k -> k -> *
-
--- class (Category (Cat j), Category (Cat k)) => Functor (f :: j -> k) where
---   fmap :: Cat j a b -> Cat k (f a) (f b)
-
--- type instance Cat (*) = (->)
-
--- infixr 0 $$
-
--- newtype NT (cat :: k -> k -> *) (f :: j -> k) (g :: j -> k) =
---   NT { ($$) :: forall x. cat (f x) (g x) }
-
--- instance Category cat => Category (NT cat) where
---   id = NT id
---   NT a . NT b = NT (a . b) 
-
--- type instance Cat (j -> k) = NT (Cat k)
-
--- data CTy (a :: Ty) (b :: Ty) where
---   CId :: CTy a a
---   -- CF  :: CTy a b -> a -> b -> CTy a b
---   CC  :: forall (a :: Ty) (b :: Ty) (c :: Ty). CTy b c -> CTy a b -> CTy a c
-
--- type instance Cat Ty = CTy
-
--- instance Category CTy where
---   id = CId
---   (.) = CC
-
--- instance Functor (CTy a) where
---   fmap = (.)
-
--- instance (Category cat, Cat k ~ cat) => Functor (NT cat f) where
---   fmap = (.)
-
--- instance Functor NT where
---   fmap h = NT $ NT $ \(NT h') -> NT $ (($$) h) $$ h'
-
--- instance Functor ExprF where
---   fmap (NT h) = NT $ \ex -> case ex of
---     UInt s n -> UInt s n
---     SInt s i -> SInt s i
---     Ref  s i -> Ref  s i
---     Valid s cond a -> Valid s (h cond) (h a)
---     Mux s cond a b -> Mux s (h cond) (h a) (h b)
-
-  
 newtype TFix (h :: (Ty -> *) -> Ty -> *) (t :: Ty) =
   TFix { unTFix :: h (TFix h) t }
 type Expr = TFix ExprF
@@ -218,11 +152,8 @@ isCond expr = case typeOf expr of
   (Unsigned, 1, Male) -> True
   _ -> False
 
--- withExpr :: Ty -> (forall t. Sing t -> Expr t -> r) -> r
--- withExpr 
-
 typeOf :: SomeExpr -> (TyRtl, Natural, Gender)
-typeOf (MkSomeExpr s e) = tyNat $ fromSing s
+typeOf (MkSomeExpr s _) = tyNat $ fromSing s
 
 tyrtl_ :: Sing s -> ExprF r '(s, n, g) -> TyRtl
 tyrtl_ SSigned   _ = Signed

@@ -22,6 +22,7 @@ default-extensions:
   - DeriveFunctor
   - DeriveTraversable
   - FlexibleContexts
+  - FlexibleInstances
   - GADTs
   - GeneralizedNewtypeDeriving
   - InstanceSigs
@@ -32,6 +33,7 @@ default-extensions:
   - RankNTypes
   - StandaloneDeriving
   - TypeFamilies
+  - TypeOperators
   - UndecidableInstances
 
 ghc-options:         -Wall

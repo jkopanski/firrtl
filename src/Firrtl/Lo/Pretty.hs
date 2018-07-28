@@ -1,15 +1,11 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 module Firrtl.Lo.Pretty where
 
-import Data.Functor.Foldable (cata)
-import Data.Monoid ((<>))
-import Data.Text.Lazy (Text)
-import Data.Text.Lazy.Builder (Builder)
-import Data.Text.Prettyprint.Doc (Doc, Pretty, space)
-import Formatting.Buildable (Buildable(..))
-import Numeric.Natural (Natural)
+import Data.Functor.Foldable     (cata)
+import Data.Monoid               ((<>))
+import Data.Text.Lazy            (Text)
+import Data.Text.Prettyprint.Doc (Doc, Pretty)
 
-import qualified Data.Text.Lazy                            as Text
-import qualified Data.Text.Lazy.Builder                    as Builder
 import qualified Data.Text.Prettyprint.Doc                 as Pretty
 import qualified Data.Text.Prettyprint.Doc.Render.Text     as Pretty
 import qualified Data.Text.Prettyprint.Doc.Render.Terminal as Terminal
@@ -34,7 +30,7 @@ operator = Pretty.annotate Operator
 annToAnsiStyle :: Ann -> Terminal.AnsiStyle
 annToAnsiStyle Ground   = Terminal.bold <> Terminal.colorDull Terminal.Green
 annToAnsiStyle Keyword  = Terminal.bold <> Terminal.colorDull Terminal.Green
-annToAnsiStyle operator = Terminal.bold <> Terminal.colorDull Terminal.Green
+annToAnsiStyle Operator = Terminal.bold <> Terminal.colorDull Terminal.Green
 
 instance Pretty.Pretty Expr.Immediate where
   pretty (Expr.Imm nat) = Pretty.pretty nat

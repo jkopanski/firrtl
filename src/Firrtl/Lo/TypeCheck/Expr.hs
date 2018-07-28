@@ -1,6 +1,5 @@
 {-# language
-        DataKinds
-      , ScopedTypeVariables
+        ScopedTypeVariables
       , TypeInType #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Firrtl.Lo.TypeCheck.Expr where

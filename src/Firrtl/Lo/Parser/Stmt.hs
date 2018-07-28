@@ -42,10 +42,10 @@ stop = Stop
 
 wire = do
   reserved "wire"
-  ident <- identifier
+  name <- identifier
   symbolic ':'
   (ty, width) <- sizedType
-  pure $ Wire ident (ty, width, Bi)
+  pure $ Wire name (ty, width, Bi)
 
 -- ^ statements which are starting with expression
 -- | combined to single function to avoid backtracking
