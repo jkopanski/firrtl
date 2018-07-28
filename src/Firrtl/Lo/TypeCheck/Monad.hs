@@ -1,7 +1,3 @@
-{-# language
-        DataKinds
-      , UndecidableInstances
-      , TypeInType #-}
 module Firrtl.Lo.TypeCheck.Monad
   ( Check (..)
   -- re-exports
@@ -15,10 +11,9 @@ module Firrtl.Lo.TypeCheck.Monad
 
   -- Context
   , Context (..)
-  , insertNode
-  , insertPort
-  , lookupNode
-  , lookupPort
+  , insert
+  , lookup
+  , singleton
 
   -- Errors
   , Error (..)
@@ -27,6 +22,7 @@ module Firrtl.Lo.TypeCheck.Monad
   , cataM
   ) where
 
+import           Prelude             hiding (lookup)
 import           Control.Monad              ((>=>))
 import           Control.Monad.Except       (MonadError (..))
 import           Control.Monad.State        (MonadState (..), modify)
@@ -40,13 +36,10 @@ import           Data.HashMap.Strict (HashMap)
 import qualified Data.HashMap.Strict as Map
 -- import           Data.Kind (type (*))
 import           Data.Semigroup      (Semigroup (..))
-import           Data.Singletons
-import           Data.Nat
 
 import qualified Numeric.Natural     as N
 
 import           Firrtl.Lo.Syntax
-import qualified Firrtl.Lo.Syntax.Safe.Expr as Safe
 import           Firrtl.Lo.TypeCheck.Ty
 
 data Error
@@ -64,45 +57,26 @@ data Error
   | NotEnoughWidth Literal N.Natural
   deriving Show
 
-data Context =
-  Ctx { nodes :: HashMap Id Safe.SomeExpr
-      , ports :: HashMap Id Ty
-      , wires :: HashMap Id Safe.SomeExpr
-      }
+-- | Context associate identifiers with type
+--   wich should be sufficient information
+--   during typechecking phase
+newtype Context t = Ctx { unCtx :: HashMap Id t }
+  deriving (Functor, Traversable, Foldable, Semigroup, Monoid)
 
-instance Semigroup Context where
-  (<>) cl cr = Ctx { nodes = Map.union (nodes cl) (nodes cr)
-                   , ports = Map.union (ports cl) (ports cr)
-                   , wires = Map.union (wires cl) (wires cr)
-                   }
+singleton :: Id -> t -> Context t
+singleton ident = Ctx . Map.singleton ident
 
-instance Monoid Context where
-  mappend = (<>)
-  mempty  = Ctx Map.empty Map.empty Map.empty
+insert :: Id -> t -> Context t -> Context t
+insert ident ty (Ctx m) = Ctx (Map.insert ident ty m)
 
--- singleton :: Id -> Ty -> Context
--- singleton ident = Ctx . Map.singleton ident
-
-insertNode :: (SingI s, SingI n) => Id -> Safe.Expr '(s, n, 'Male) -> Context -> Context
-insertNode ident e ctx =
-  ctx { nodes = Map.insert ident (Safe.fromExpr' e) (nodes ctx) }
-
--- TODO: this could guarantee thet it is Safe.Expr '(s, n, 'Male)
-lookupNode :: Id -> Context -> Maybe Safe.SomeExpr
-lookupNode ident = Map.lookup ident . nodes
-
-insertPort :: Id -> Ty -> Context -> Context
-insertPort ident t ctx =
-  ctx { ports = Map.insert ident t (ports ctx) }
-
-lookupPort :: Id -> Context -> Maybe Ty
-lookupPort ident = Map.lookup ident . ports
+lookup :: Id -> Context t -> Maybe t
+lookup ident (Ctx m) = Map.lookup ident m
 
 -- Should we go ReaderT and mutate it's context?
 -- Check { runCheck :: ExceptT Error (ReaderT Context IO) a }
 -- https://www.fpcomplete.com/blog/2017/07/the-rio-monad
 newtype Check a =
-  Check { runCheck :: ExceptT Error (StateT Context Identity) a }
+  Check { runCheck :: ExceptT Error (StateT (Context Ty) Identity) a }
     deriving
       ( Functor
       , Applicative
@@ -113,7 +87,7 @@ deriving instance (ErrorType Check ~ Error) => MonadError Check
 -- deriving instance (StateType Check ~ Context) => MonadState Check
 
 instance MonadState Check where
-  type StateType Check = Context
+  type StateType Check = Context Ty
   get = Check $ lift $ get
   put = Check . lift . put
 

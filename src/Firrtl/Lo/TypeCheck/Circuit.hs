@@ -1,6 +1,7 @@
 {-# language
         DataKinds
       , TypeInType #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 module Firrtl.Lo.TypeCheck.Circuit where
 
 import Control.Monad.Except (throwError)
@@ -10,9 +11,9 @@ import Data.Nat
 
 import qualified Firrtl.Lo.Syntax.Safe as Safe
 import           Firrtl.Lo.Syntax.Circuit
-import           Firrtl.Lo.Syntax.Stmt
+-- import           Firrtl.Lo.Syntax.Stmt
 import           Firrtl.Lo.TypeCheck.Monad
-import           Firrtl.Lo.TypeCheck.Stmt
+import           Firrtl.Lo.TypeCheck.Stmt  ()
 import           Firrtl.Lo.TypeCheck.Ty
 
 instance Typed Circuit where
@@ -49,9 +50,9 @@ instance Typed Module where
     put save
     pure (Safe.Module ident safePorts safeBody)
 
-      where addPort :: Safe.SomePort -> Context -> Context
+      where addPort :: Safe.SomePort -> Context Ty -> Context Ty
             addPort (Safe.MkSomePort s (Safe.Port name)) ctx =
-              insertPort name (FromSing s) ctx
+              insert name (FromSing s) ctx
 
 instance Typed Port where
   type TypeSafe Port = Safe.SomePort

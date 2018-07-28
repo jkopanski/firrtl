@@ -1,6 +1,7 @@
 {-# language
         DataKinds
       , TypeInType #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 module Firrtl.Lo.TypeCheck.Stmt where
 
 import Control.Monad.Except (throwError)
@@ -8,12 +9,11 @@ import Control.Monad.State  (modify)
 import Data.Singletons.Prelude
 import Data.Singletons.Decide
 
-import qualified Firrtl.Lo.Syntax.Safe as Safe
-import           Firrtl.Lo.Syntax.Expr
+import qualified Firrtl.Lo.Syntax.Safe  as Safe
 import           Firrtl.Lo.Syntax.Stmt
+import           Firrtl.Lo.TypeCheck.Expr  ()
 import           Firrtl.Lo.TypeCheck.Monad
 import           Firrtl.Lo.TypeCheck.Ty
-import           Firrtl.Lo.TypeCheck.Expr
 
 instance Typed Stmt where
   type TypeSafe Stmt = Safe.Stmt
@@ -44,7 +44,8 @@ instance Typed Stmt where
     case sexpr of
       Safe.MkSomeExpr se ee -> case se of
         STuple3 s1 s2 SMale -> do
-          withSingI s1 $ withSingI s2 $
-            modify (insertNode ident ee)
+          let ty = fromSing s1
+              n  = fromSing s2
+          modify (insert ident (ty, n, Male))
           pure $ Safe.Node ident ee
         _ -> throwError $ NodeMale (fromSing se)

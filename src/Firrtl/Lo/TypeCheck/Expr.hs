@@ -2,9 +2,10 @@
         DataKinds
       , ScopedTypeVariables
       , TypeInType #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 module Firrtl.Lo.TypeCheck.Expr where
 
-import Data.Functor.Foldable
+import Prelude hiding (lookup)
 import Data.Maybe              (fromMaybe)
 import Data.Singletons
 import Data.Singletons.Decide
@@ -16,7 +17,6 @@ import           Firrtl.Lo.Syntax.Expr
 import qualified Firrtl.Lo.Syntax.Safe as Safe
 import           Firrtl.Lo.TypeCheck.Monad
 import           Firrtl.Lo.TypeCheck.Ty
--- import           Firrtl.Lo.TypeCheck.Expr
 
 instance Typed Expr where
   type TypeSafe Expr = Safe.SomeExpr
@@ -27,12 +27,13 @@ instance Typed Expr where
     either throwError pure $ cataM (alg ctx) e
 
 -- | this is awesome as actually only statements can extend Context
-alg :: Context -> ExprF Safe.SomeExpr -> Either Error Safe.SomeExpr
+alg :: Context Ty -> ExprF Safe.SomeExpr -> Either Error Safe.SomeExpr
 alg ctx (RefF ident) =
-  let mexpr = lookupNode ident ctx
-   in case mexpr of
-        Just expr -> Right expr
-        Nothing   -> Left $ NotInScope ident Nothing
+  let mty = lookup ident ctx
+   in case mty of
+        Just ty -> Right $ case toSing ty of
+          SomeSing s -> Safe.fromExpr (Safe.Ref s ident) -- Right expr
+        Nothing -> Left $ NotInScope ident Nothing
 
 alg _ (LitF l) = case l of
   UInt mwidth value ->

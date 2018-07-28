@@ -18,6 +18,7 @@ extra-source-files:
 
 default-extensions:
   - ApplicativeDo
+  - DataKinds
   - DeriveFunctor
   - DeriveTraversable
   - FlexibleContexts
@@ -31,6 +32,7 @@ default-extensions:
   - RankNTypes
   - StandaloneDeriving
   - TypeFamilies
+  - UndecidableInstances
 
 ghc-options:         -Wall
 
