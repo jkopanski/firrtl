@@ -31,6 +31,7 @@ import           Control.Monad              ((>=>))
 import           Control.Monad.Except       (MonadError (..))
 import           Control.Monad.State        (MonadState (..), modify)
 import           Control.Monad.Identity     (Identity (..))
+import           Control.Monad.Trans        (lift)
 import           Control.Monad.Trans.Except (ExceptT)
 import           Control.Monad.Trans.State  (StateT)
 
@@ -113,8 +114,8 @@ deriving instance (ErrorType Check ~ Error) => MonadError Check
 
 instance MonadState Check where
   type StateType Check = Context
-  get = get
-  put = put
+  get = Check $ lift $ get
+  put = Check . lift . put
 
 class Typed ast where
   -- type TypeFor ast

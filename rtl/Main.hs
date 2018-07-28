@@ -19,7 +19,6 @@ main = do
     Left e -> fail $ Text.Megaparsec.parseErrorPretty' text e
     Right (Syntax.Top ast) -> pure ast
 
-  print ast
   case Check.check ast of
     Right _  -> pure ()
     Left err -> fail $ show err
