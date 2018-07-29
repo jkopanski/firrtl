@@ -1,58 +1,103 @@
-{-# language StandaloneDeriving, UndecidableInstances #-}
-module Firrtl.Lo.TypeCheck.Monad where
+module Firrtl.Lo.TypeCheck.Monad
+  ( Check (..)
+  -- re-exports
+  , get
+  , modify
+  , put
+  , throwError
 
+  -- classes
+  , Typed (..)
+
+  -- Context
+  , Context (..)
+  , insert
+  , lookup
+  , singleton
+
+  -- Errors
+  , Error (..)
+
+  -- misc
+  , cataM
+  ) where
+
+import           Prelude             hiding (lookup)
+import           Control.Monad              ((>=>))
 import           Control.Monad.Except       (MonadError (..))
-import           Control.Monad.Reader       (MonadReader (..))
+import           Control.Monad.State        (MonadState (..), modify)
 import           Control.Monad.Identity     (Identity (..))
+import           Control.Monad.Trans        (lift)
 import           Control.Monad.Trans.Except (ExceptT)
-import           Control.Monad.Trans.Reader (ReaderT)
+import           Control.Monad.Trans.State  (StateT)
 
+import           Data.Functor.Foldable
 import           Data.HashMap.Strict (HashMap)
 import qualified Data.HashMap.Strict as Map
+-- import           Data.Kind (type (*))
 import           Data.Semigroup      (Semigroup (..))
 
 import qualified Numeric.Natural     as N
 
-import Firrtl.Lo.Syntax
-import Firrtl.Lo.TypeCheck.Types
+import           Firrtl.Lo.Syntax
+import           Firrtl.Lo.TypeCheck.Ty
 
 data Error
-  = ExpectedGround    Type
-  | ExpectedGroundInt Type
-  | ExpectedParameter Type
-  | Mismatch Type Type
-  | NotInScope Id (Maybe Type)
+  = ExpectedGround    Ty
+  | ExpectedGroundInt Ty
+  | ExpectedParameter Ty
+  | Mismatch Ty Ty
+  | NodeMale Ty
+  | NotInScope Id (Maybe Ty)
   | NoTopModule Id
-  | ParameterToBig N.Natural Type
-  | Connectable ConnType ConnType
-  | Containable ConnType ConnType
-  | Equivalent ConnType ConnType
+  | ParameterToBig N.Natural Ty
+  | Connectable Ty Ty
+  | Containable Ty Ty
+  | Equivalent Ty Ty
+  | NotEnoughWidth Literal N.Natural
   deriving Show
 
-newtype Context = Ctx { unCtx :: HashMap Id ConnType }
+-- | Context associate identifiers with type
+--   wich should be sufficient information
+--   during typechecking phase
+newtype Context t = Ctx { unCtx :: HashMap Id t }
+  deriving (Functor, Traversable, Foldable, Semigroup, Monoid)
 
-instance Semigroup Context where
-  (<>) (Ctx cl) (Ctx cr) = Ctx $ Map.union cl cr
-
-instance Monoid Context where
-  mappend = (<>)
-  mempty  = Ctx Map.empty
-
-singleton :: Id -> ConnType -> Context
+singleton :: Id -> t -> Context t
 singleton ident = Ctx . Map.singleton ident
 
-insert :: Id -> ConnType -> Context -> Context
-insert ident t = Ctx . Map.insert ident t . unCtx
+insert :: Id -> t -> Context t -> Context t
+insert ident ty (Ctx m) = Ctx (Map.insert ident ty m)
 
-lookup :: Id -> Context -> Maybe ConnType
-lookup ident = Map.lookup ident . unCtx
+lookup :: Id -> Context t -> Maybe t
+lookup ident (Ctx m) = Map.lookup ident m
 
-newtype Check a = Check { runCheck :: ExceptT Error (ReaderT Context Identity) a }
-  deriving
-    ( Functor
-    , Applicative
-    , Monad
-    )
+-- Should we go ReaderT and mutate it's context?
+-- Check { runCheck :: ExceptT Error (ReaderT Context IO) a }
+-- https://www.fpcomplete.com/blog/2017/07/the-rio-monad
+newtype Check a =
+  Check { runCheck :: ExceptT Error (StateT (Context Ty) Identity) a }
+    deriving
+      ( Functor
+      , Applicative
+      , Monad
+      )
 
 deriving instance (ErrorType Check ~ Error) => MonadError Check
-deriving instance (EnvType Check ~ Context) => MonadReader Check
+-- deriving instance (StateType Check ~ Context) => MonadState Check
+
+instance MonadState Check where
+  type StateType Check = Context Ty
+  get = Check $ lift $ get
+  put = Check . lift . put
+
+class Typed ast where
+  -- type TypeFor ast
+  type TypeSafe ast
+
+--   hasType  :: TypeFor ast -> Check ()
+--   typeOf   :: ast -> Check (TypeFor ast)
+  typeSafe :: ast -> Check (TypeSafe ast)
+
+cataM :: (Traversable (Base t), Monad m, Recursive t) => (Base t c -> m c) -> t -> m c
+cataM = cata . (sequence >=>)

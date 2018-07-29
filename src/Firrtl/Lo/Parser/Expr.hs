@@ -11,6 +11,7 @@ import Text.Parser.Char
 import Text.Parser.Token hiding (hexadecimal, octal)
 
 import qualified Data.Char
+import Numeric.Natural
 
 expr :: (Monad m, TokenParsing m) => m Expr
 expr = ref
@@ -119,12 +120,28 @@ number :: TokenParsing m => Integer -> m Char -> m Integer
 number base baseDigit =
   foldl' (\x d -> base*x + toInteger (Data.Char.digitToInt d)) 0 <$> some baseDigit
 
+data Sign = Plus | Minus
+
+sign :: TokenParsing m => m Sign
+sign = option Plus (char '-' $> Minus)
+{-# INLINE sign #-}
+
+literalBits :: TokenParsing m => Integer -> m Char -> m Char -> m Integer
+literalBits base prefix baseDigit = do
+  prefix
+  s <- sign
+  n <- number base (skipMany (char '_') *> baseDigit)
+  pure $ case s of
+    Plus  -> n
+    Minus -> negate n
+{-# INLINE literalBits #-}
+
 hexadecimal :: TokenParsing m => m Integer
-hexadecimal = text "0x" *> number 16 hexDigit
+hexadecimal = literalBits 16 (oneOf "hH") hexDigit <?> "hexadecimal literal"
 {-# INLINE hexadecimal #-}
 
 octal :: TokenParsing m => m Integer
-octal = text "0o" *> number 8 octDigit
+octal = literalBits 8 (oneOf "oO") octDigit <?> "octal literal"
 {-# INLINE octal #-}
 
 binDigit :: CharParsing m => m Char
@@ -132,10 +149,10 @@ binDigit = oneOf "01" <?> "binary digit"
 {-# INLINE binDigit #-}
 
 binary :: TokenParsing m => m Integer
-binary = text "0b" *> number 2 binDigit
+binary = literalBits 2 (oneOf "bB") binDigit <?> "binary literal"
 {-# INLINE binary #-}
 
-size :: TokenParsing m => m Int
+size :: TokenParsing m => m Natural
 size = angles $ fromInteger <$> natural
 
 value :: TokenParsing m => m Int
@@ -144,13 +161,14 @@ value = fromInteger <$> integer
 unsignedLit :: (Monad m, TokenParsing m) => m Literal
 unsignedLit = do
   reserved "UInt"
-  val <- fromInteger <$> parens (decimal <|> (stringLiteral >> (hexadecimal <|> octal <|> binary)))
-  pure (UInt val)
+  msize <- optional size
+  val <- fromInteger <$> parens (decimal <|> (between (char '"') (char '"') (hexadecimal <|> octal <|> binary)))
+  pure (UInt msize val)
 
 signedLit :: (Monad m, TokenParsing m) => m Literal
 signedLit = do
   reserved "SInt"
   -- TODO: use width hint
   msize <- optional size
-  val <- fromInteger <$> parens (integer <|> (stringLiteral >> (hexadecimal <|> octal <|> binary)))
-  pure (SInt val)
+  val <- fromInteger <$> parens (integer <|> (between (char '"') (char '"') (hexadecimal <|> octal <|> binary)))
+  pure (SInt msize val)

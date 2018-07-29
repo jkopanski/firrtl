@@ -36,8 +36,8 @@ data Gender
 
 data Type
   = Natural N.Natural -- | @Nat@ has it's value in the type level, not it's width
-  | Unsigned Int
-  | Signed Int
+  | Unsigned N.Natural
+  | Signed N.Natural
   | Clock
   deriving (Eq, Show)
 
@@ -53,13 +53,13 @@ female = ConnType Female
 bi = ConnType Bi
 
 class HasWidth t where
-  width :: t -> Int
+  width :: t -> N.Natural
 
 instance HasWidth Type where
   width (Unsigned w) = w
   width (Signed w) = w
   width Clock    = 1
-  width (Natural n)  = minBitWidth $ fromIntegral $ toInteger n
+  width (Natural n)  = fromInteger $ toInteger $ minBitWidth $ fromIntegral $ toInteger n
 
 instance HasWidth ConnType where
   width = width . connType

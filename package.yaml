@@ -18,11 +18,14 @@ extra-source-files:
 
 default-extensions:
   - ApplicativeDo
+  - DataKinds
   - DeriveFunctor
   - DeriveTraversable
   - FlexibleContexts
+  - FlexibleInstances
   - GADTs
   - GeneralizedNewtypeDeriving
+  - InstanceSigs
   - KindSignatures
   - LambdaCase
   - MultiParamTypeClasses
@@ -30,18 +33,23 @@ default-extensions:
   - RankNTypes
   - StandaloneDeriving
   - TypeFamilies
+  - TypeOperators
+  - UndecidableInstances
 
 ghc-options:         -Wall
 
 dependencies:
-  - base >= 4.9 && < 10
+  - base >= 4.11 && < 10
   - formatting
   - megaparsec
   - monads-tf
+  - natural-transformation
   - parsers
   - prettyprinter
   - prettyprinter-ansi-terminal
   - recursion-schemes
+  - singletons >= 2.4
+  - singleton-nats
   - text
   - transformers
   - unordered-containers

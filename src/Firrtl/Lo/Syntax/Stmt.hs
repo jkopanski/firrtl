@@ -9,10 +9,11 @@ module Firrtl.Lo.Syntax.Stmt
   ) where
 
 import Data.Text (Text)
+import Numeric.Natural
 
 import Firrtl.Lo.Syntax.Common
 import Firrtl.Lo.Syntax.Expr
-import Firrtl.Lo.TypeCheck.Types
+import Firrtl.Lo.TypeCheck.Ty
 
 data Stmt
   = Block [Stmt]
@@ -27,5 +28,5 @@ data Stmt
   | Print Expr Expr Text [Expr]
   -- | Reg Id Type (Maybe Expr) (Maybe Reset)
   | Stop Expr Expr Int
-  | Wire Id Type
+  | Wire Id (TyRtl, Natural, Gender)
   deriving (Eq, Show)

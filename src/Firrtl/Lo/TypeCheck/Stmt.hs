@@ -1,54 +1,51 @@
-{-|
-Type checker for FIRRTL statements.
-Checks if Statemets are legal.
-|-}
+{-# language
+        DataKinds
+      , TypeInType #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 module Firrtl.Lo.TypeCheck.Stmt where
 
-import Prelude hiding (lookup)
-
-import Control.Monad        (unless)
 import Control.Monad.Except (throwError)
-import Control.Monad.Reader (asks)
+import Control.Monad.State  (modify)
+import Data.Singletons.Prelude
+import Data.Singletons.Decide
 
-import Firrtl.Lo.Syntax.Stmt
-import Firrtl.Lo.TypeCheck.Expr
-import Firrtl.Lo.TypeCheck.Monad
-import Firrtl.Lo.TypeCheck.Types
+import qualified Firrtl.Lo.Syntax.Safe  as Safe
+import           Firrtl.Lo.Syntax.Stmt
+import           Firrtl.Lo.TypeCheck.Expr  ()
+import           Firrtl.Lo.TypeCheck.Monad
+import           Firrtl.Lo.TypeCheck.Ty
 
-check :: Stmt -> Check ()
-check (Block stmts) = mapM_ check stmts
+instance Typed Stmt where
+  type TypeSafe Stmt = Safe.Stmt
 
-check (Connect target source) = do
-  tytarget <- typeof target
-  tysource <- typeof source
-  unless (tytarget `connectable` tysource) (throwError $ Connectable tytarget tysource)
-  unless (tytarget `containable` tysource) (throwError $ Containable tytarget tysource)
-  unless (tytarget `equivalent` tysource) (throwError $ Equivalent tytarget tysource)
-  pure ()
+  typeSafe :: Stmt -> Check Safe.Stmt
+  typeSafe (Block stmts) = Safe.Block <$> sequence (typeSafe <$> stmts)
 
-check (Node ident expr) = do
-  ty <- typeof expr
-  asks (lookup ident)
-    >>= \case
-      Nothing -> throwError $ NotInScope ident (Just $ connType ty)
-      Just tyid -> unless (tyid == ty) (throwError $ Mismatch (connType ty) (connType tyid))
+  typeSafe (Connect lexpr rexpr) = do
+    lhs <- typeSafe lexpr
+    rhs <- typeSafe rexpr
+    case (lhs, rhs) of
+      (Safe.MkSomeExpr ls le, Safe.MkSomeExpr rs re) -> case (ls, rs) of
+        (STuple3 lt ln lg, STuple3 rt rn rg) -> case lt %~ rt of
+          Disproved _ -> throwError $ Equivalent (FromSing ls) (FromSing rs)
+          Proved Refl -> case (ln %>= rn) %~ STrue of
+            Disproved _ -> throwError $ Containable (FromSing ls) (FromSing rs)
+            Proved Refl -> case (lg, rg) of
+              (SFemale, SBi  ) -> pure (Safe.Connect le re)
+              (SFemale, SMale) -> pure (Safe.Connect le re)
+              (SBi    , SBi  ) -> pure (Safe.Connect le re)
+              (SBi    , SMale) -> pure (Safe.Connect le re)
+              (_      , _    ) -> throwError $ Connectable (FromSing ls) (FromSing rs)
 
-check (Print clk cond _ _) = do
-  tyclk <- typeof clk
-  tycond <- typeof cond
-  let contyclk = connType tyclk
-      contycond = connType tycond
-  unless (contyclk == Clock) (throwError $ Mismatch Clock contyclk)
-  unless (contycond == Unsigned 1) (throwError $ Mismatch (Unsigned 1) contycond)
+  typeSafe Empty = pure Safe.Empty
 
-check (Stop clk halt _) = do
-  tyclk <- typeof clk
-  tyhalt <- typeof halt
-  let contyclk = connType tyclk
-      contyhalt = connType tyhalt
-  unless (contyclk == Clock) (throwError $ Mismatch Clock contyclk)
-  unless (contyhalt == Unsigned 1) (throwError $ Mismatch (Unsigned 1) contyhalt)
-
-check Empty = pure ()
-check (Invalid _) = pure ()
-check (Wire _ _) = pure ()
+  typeSafe (Node ident expr) = do
+    sexpr <- typeSafe expr
+    case sexpr of
+      Safe.MkSomeExpr se ee -> case se of
+        STuple3 s1 s2 SMale -> do
+          let ty = fromSing s1
+              n  = fromSing s2
+          modify (insert ident (ty, n, Male))
+          pure $ Safe.Node ident ee
+        _ -> throwError $ NodeMale (fromSing se)

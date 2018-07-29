@@ -9,7 +9,7 @@ import Data.Maybe               (fromMaybe)
 import Firrtl.Lo.Parser.Monad
 import Firrtl.Lo.Parser.Stmt
 import Firrtl.Lo.Syntax
-import Firrtl.Lo.TypeCheck.Types
+import Firrtl.Lo.TypeCheck.Ty
 import Text.Megaparsec          (MonadParsec, Pos, Token)
 import Text.Parser.Combinators
 import Text.Parser.Token
@@ -34,15 +34,15 @@ data ModuleType = Standard | External
 mod :: Parser Module
 mod = do
   space
-  ref <- Text.Megaparsec.Char.Lexer.indentLevel
+  reflvl <- Text.Megaparsec.Char.Lexer.indentLevel
   moduleType <- reserved "module" $> Standard
             <|> reserved "extmodule" $> External
   name <- (identifier <?> "module name") <* symbolic ':'
 
   -- grab indentation level
-  lvl <- Text.Megaparsec.Char.Lexer.indentGuard space GT ref
+  lvl <- Text.Megaparsec.Char.Lexer.indentGuard space GT reflvl
   -- get ports
-  miface <- optional $ indentedItems ref lvl space port
+  miface <- optional $ indentedItems reflvl lvl space port
   -- top level modules won't have any I/O
   let iface = fromMaybe [] miface
 
@@ -50,7 +50,7 @@ mod = do
     External -> pure (ExtModule name iface)
     Standard ->
       -- grab module body using same indentation level as ports
-      Module name iface . Block <$> indentedItems ref lvl space stmt
+      Module name iface . Block <$> indentedItems reflvl lvl space stmt
 
 indentedItems
   :: MonadParsec e s m
@@ -117,9 +117,10 @@ port = do
   gender <- direction
   name <- identifier
   _ <- symbolic ':'
-  ty <- typeDecl
-  pure $ Port name (gender ty)
+  (ty, width) <- sizedType
+  pure $ Port name (ty, width, gender)
 
-direction :: (Monad m, TokenParsing m) => m (Type -> ConnType)
-direction = reserved "input"  $> male
-        <|> reserved "output" $> female
+direction :: (Monad m, TokenParsing m) => m Gender
+direction = reserved "input"  $> Male
+        <|> reserved "output" $> Female
+        <|> reserved "inout"  $> Bi

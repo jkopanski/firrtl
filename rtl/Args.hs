@@ -9,8 +9,8 @@ data Config = Config
 options :: ParserInfo Config
 options = info (config <**> helper)
   ( fullDesc
- <> progDesc "IOHK test task"
- <> header "node - send and receive messages" )
+ <> progDesc "LoFIRRTL interpreter"
+ <> header "Interpreter for lowered form of Flexible Intermediate Representation for RTL" )
 
 config :: Parser Config
 config = Config <$> input

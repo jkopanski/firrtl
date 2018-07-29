@@ -28,8 +28,8 @@ data TernaryOp = Bits
 
 -- | Literals are carrying type information from the begining
 data Literal
-  = UInt Int
-  | SInt Int
+  = UInt (Maybe Natural) Natural
+  | SInt (Maybe Natural) Int
   deriving (Eq, Show)
 
 -- | Argument ro paremetrized operators and subindex expression
