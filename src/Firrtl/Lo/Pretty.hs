@@ -1,13 +1,12 @@
-module Firrtl.Lo.Pretty where
+module Firrtl.Lo.Pretty
+  ( terminal
+  ) where
 
-import Firrtl.Lo.Pretty.Common
-import qualified Firrtl.Lo.Pretty.Circuit as Circuit
-import qualified Firrtl.Lo.Pretty.Expr    as Expr
-import qualified Firrtl.Lo.Pretty.Stmt    as Stmt
+import           Firrtl.Lo.Pretty.Common
+import qualified Firrtl.Lo.Pretty.Circuit      as Circuit
 import qualified Firrtl.Lo.Syntax.Safe.Circuit as Safe
 
 import           Data.Text.Lazy                            (Text)
-import           Data.Text.Prettyprint.Doc                 (Doc)
 import qualified Data.Text.Prettyprint.Doc                 as Pretty
 import qualified Data.Text.Prettyprint.Doc.Render.Terminal as Terminal
 

@@ -1,6 +1,4 @@
-{-# language
-        DataKinds
-      , TypeInType #-}
+{-# language TypeInType #-}
 module Firrtl.Lo.Pretty.Circuit where
 
 import qualified Data.List.NonEmpty as NE
