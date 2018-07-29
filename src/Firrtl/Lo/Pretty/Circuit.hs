@@ -13,19 +13,22 @@ import qualified Firrtl.Lo.Pretty.Stmt as Stmt
 import           Firrtl.Lo.Syntax.Safe.Circuit
 import           Firrtl.Lo.TypeCheck.Ty
 
-pretty :: Circuit -> Doc Ann
-pretty (Circuit n modules) =
-  keyword "circuit" <+> Pretty.pretty n <+> ":"
-                    <+> Pretty.nest 2 (Pretty.vsep $ NE.toList (prettyModule <$> modules))
+prettyCircuit :: Circuit -> Doc Ann
+prettyCircuit (Circuit n modules) =
+  keyword "circuit" <+> Pretty.pretty n <+> ":" <> Pretty.nest 2
+    (Pretty.hardline <> (Pretty.vsep (NE.toList (prettyModule <$> modules))))
 
 prettyModule :: Module -> Doc Ann
 prettyModule (ExtModule n ports) =
-  keyword "extmodule" <+> Pretty.pretty n <+> ":" <+> Pretty.nest 2 (prettyPorts (prettyPort <$> ports))
+  keyword "extmodule" <+> Pretty.pretty n <+> ":" <+> Pretty.nest 2
+    (Pretty.hardline <> prettyPorts (prettyPort <$> ports))
 prettyModule (Module n ports stmts) =
   keyword "module" <+> Pretty.pretty n <+> ":"
-                   <+> Pretty.nest 2 (Pretty.align (Pretty.vsep [ prettyPorts (prettyPort <$> ports)
-                                                                , Stmt.pretty stmts
-                                                                ]))
+                   <+> Pretty.nest 2
+                     (Pretty.hardline <> Pretty.align
+                       (Pretty.vsep [ prettyPorts (prettyPort <$> ports)
+                                    , Stmt.pretty stmts
+                                    ]))
   
 data PrettyPort = PPort
   { dir  :: Doc Ann -- ^ pretty gender (input/output/inout)

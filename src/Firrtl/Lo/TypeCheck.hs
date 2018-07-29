@@ -4,7 +4,6 @@ module Firrtl.Lo.TypeCheck
   ) where
 
 import Control.Monad.Except      (runExceptT)
-import Control.Monad.Reader      (runReaderT)
 import Control.Monad.State       (evalStateT)
 import Data.Functor.Identity     (runIdentity)
 import           Firrtl.Lo.Syntax            (Circuit)
