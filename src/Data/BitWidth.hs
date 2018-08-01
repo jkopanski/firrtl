@@ -6,7 +6,7 @@ module Data.BitWidth where
 
 import Data.Singletons.Prelude
 import Data.Singletons.TH
-import GHC.TypeNats as TN
+import qualified GHC.TypeNats as TN
 import Numeric.Natural (Natural)
 
 -- ^ Runtime representation of bit width.
@@ -38,3 +38,26 @@ instance SingKind BW where
     then SomeSing SO
     else case toSing (n - 1) of
       SomeSing sx -> SomeSing (SS sx)
+
+$(promote [d|
+  bwPlus :: BW -> BW -> BW
+  bwPlus O b = S b
+  bwPlus (S a) b = S (bwPlus a b)
+
+  bwMul :: BW -> BW -> BW
+  bwMul O b = b
+  bwMul (S a) b = bwPlus b (bwMul a b)
+
+  bwMinus :: BW -> BW -> BW
+  bwMinus O _ = O
+  bwMinus (S a) (S b) = bwMinus a b
+  bwMinus (S a) O = a
+
+  bwAbs :: BW -> BW
+  bwAbs n = n
+
+  bwSignum :: BW -> BW
+  bwSignum _ = O
+
+
+  |])
