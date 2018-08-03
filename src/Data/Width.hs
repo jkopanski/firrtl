@@ -2,11 +2,13 @@
         EmptyCase
       , ScopedTypeVariables
       , TemplateHaskell #-}
-module Data.BitWidth where
+module Data.Width where
 
 import Data.Singletons.Prelude
 import Data.Singletons.TH
+import GHC.TypeNats as TN
 import Numeric.Natural (Natural)
+import Unsafe.Coerce
 
 -- ^ Runtime representation of bit width.
 --   Newtype wrapper since Natural is already used by SNat
@@ -41,6 +43,71 @@ instance SingKind BW where
 $(genPromotions [''BW])
 $(singEqInstance ''BW)
 $(singDecideInstance ''BW)
+
+type family BWPlus (a :: BW) (b :: BW) :: BW where
+  BWPlus 'O b = 'S b
+  BWPlus ('S a) b = 'S (BWPlus a b)
+
+type family BWMul (a :: BW) (b :: BW) :: BW where
+  BWMul 'O b = b
+  BWMul ('S a) b = BWPlus b (BWMul a b)
+
+type family BWMinus (a :: BW) (b :: BW) :: BW where
+  BWMinus 'O _ = 'O
+  BWMinus ('S a) ('S b) = BWMinus a b
+  BWMinus ('S a) 'O = a
+
+type family BWAbs (a :: BW) :: BW where
+  BWAbs a = a
+
+type family BWSignum (a :: BW) :: BW where
+  BWSignum _ = 'O
+
+type family BWFromInteger (a :: TN.Nat) :: BW where
+  BWFromInteger 1 = 'O
+  BWFromInteger n = 'S (BWFromInteger (n TN.- 1))
+
+instance PNum BW where
+  type a + b = BWPlus a b
+  type a - b = BWMinus a b
+  type a * b = BWMul a b
+  type Negate (a :: BW) = Error "Cannot negate bit width"
+  type Abs a = BWAbs a
+  type Signum a = BWSignum a
+  type FromInteger a = BWFromInteger a
+
+instance SNum BW where
+  sa %+ sb =
+    let a = fromSing sa
+        b = fromSing sb
+        ex = toSing (a + b)
+    in
+    case ex of
+      SomeSing w -> unsafeCoerce w
+
+  sa %- sb =
+    let a = fromSing sa
+        b = fromSing sb
+        ex = toSing (a - b)
+    in
+    case ex of
+      SomeSing w -> unsafeCoerce w
+
+  sa %* sb =
+    let a = fromSing sa
+        b = fromSing sb
+        ex = toSing (a * b)
+    in
+    case ex of
+      SomeSing w -> unsafeCoerce w
+
+  sNegate _ = error "Cannot call sNegate on a bit width singleton."
+
+  sAbs x = x
+
+  sSignum _ = SO
+
+  -- sFromInteger x = x
 
 -- $(singletons [d|
 --   bwPlus :: BW -> BW -> BW
