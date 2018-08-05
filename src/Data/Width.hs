@@ -6,7 +6,7 @@ module Data.Width where
 
 import Data.Singletons.Prelude
 import Data.Singletons.TH
-import GHC.TypeNats as TN
+import GHC.TypeNats (Nat)
 import Numeric.Natural (Natural)
 import Unsafe.Coerce
 
@@ -14,7 +14,6 @@ import Unsafe.Coerce
 --   Newtype wrapper since Natural is already used by SNat
 newtype Width = Width { unWidth :: Natural }
   deriving (Enum, Eq, Integral, Num, Ord, Read, Real, Show)
-
 
 -- ^ Compared to Nat bit width is at least 1
 data BW = O | S BW deriving (Eq, Show, Ord)
@@ -63,9 +62,9 @@ type family BWAbs (a :: BW) :: BW where
 type family BWSignum (a :: BW) :: BW where
   BWSignum _ = 'O
 
-type family BWFromInteger (a :: TN.Nat) :: BW where
+type family BWFromInteger (a :: Nat) :: BW where
   BWFromInteger 1 = 'O
-  BWFromInteger n = 'S (BWFromInteger (n TN.- 1))
+  BWFromInteger n = 'S (BWFromInteger (n - 1))
 
 instance PNum BW where
   type a + b = BWPlus a b
@@ -107,7 +106,11 @@ instance SNum BW where
 
   sSignum _ = SO
 
-  -- sFromInteger x = x
+  sFromInteger sn =
+    case sn %~ (sing :: Sing 1) of
+      Proved Refl -> SO
+      Disproved _ -> unsafeCoerce $
+        SS (sFromInteger $ sn %- (sing :: Sing 1))
 
 -- $(singletons [d|
 --   bwPlus :: BW -> BW -> BW
