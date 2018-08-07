@@ -4,6 +4,7 @@ import Control.Applicative
 import Data.Functor             (($>))
 import Data.List                (foldl')
 import Data.Semigroup           ((<>))
+import Data.Width
 import Firrtl.Lo.Parser.Monad
 import Firrtl.Lo.Syntax.Expr
 import Text.Parser.Combinators
@@ -11,7 +12,6 @@ import Text.Parser.Char
 import Text.Parser.Token hiding (hexadecimal, octal)
 
 import qualified Data.Char
-import Numeric.Natural
 
 expr :: (Monad m, TokenParsing m) => m Expr
 expr = ref
@@ -152,7 +152,7 @@ binary :: TokenParsing m => m Integer
 binary = literalBits 2 (oneOf "bB") binDigit <?> "binary literal"
 {-# INLINE binary #-}
 
-size :: TokenParsing m => m Natural
+size :: TokenParsing m => m Width
 size = angles $ fromInteger <$> natural
 
 value :: TokenParsing m => m Int

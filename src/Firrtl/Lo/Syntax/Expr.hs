@@ -8,6 +8,7 @@ whus we can omit SubField, SubIndex and SubAccess expressions here.
 module Firrtl.Lo.Syntax.Expr where
 
 import Data.Functor.Foldable.TH
+import Data.Width
 import Numeric.Natural          (Natural)
 import Firrtl.Lo.Syntax.Common  (Id)
 
@@ -28,8 +29,8 @@ data TernaryOp = Bits
 
 -- | Literals are carrying type information from the begining
 data Literal
-  = UInt (Maybe Natural) Natural
-  | SInt (Maybe Natural) Int
+  = UInt (Maybe Width) Natural
+  | SInt (Maybe Width) Int
   deriving (Eq, Show)
 
 -- | Argument ro paremetrized operators and subindex expression

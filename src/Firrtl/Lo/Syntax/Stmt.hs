@@ -9,7 +9,6 @@ module Firrtl.Lo.Syntax.Stmt
   ) where
 
 import Data.Text (Text)
-import Numeric.Natural
 
 import Firrtl.Lo.Syntax.Common
 import Firrtl.Lo.Syntax.Expr
@@ -28,5 +27,5 @@ data Stmt
   | Print Expr Expr Text [Expr]
   -- | Reg Id Type (Maybe Expr) (Maybe Reset)
   | Stop Expr Expr Int
-  | Wire Id (TyRtl, Natural, Gender)
+  | Wire Id RTy
   deriving (Eq, Show)

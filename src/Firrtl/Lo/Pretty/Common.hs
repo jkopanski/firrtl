@@ -3,7 +3,7 @@
       , TypeInType #-}
 module Firrtl.Lo.Pretty.Common where
 
-import           Data.Nat
+import           Data.Width
 import           Data.Singletons.Prelude
 
 import           Data.Text.Prettyprint.Doc                 (Doc)
@@ -57,7 +57,7 @@ prettyTy (STuple3 t n _) =
         SClock    -> "Clock"
         SSigned   -> "SInt"
         SUnsigned -> "UInt"
-      width = angles $ Pretty.pretty $ nat (fromSing n)
+      width = angles $ Pretty.pretty $ unWidth (fromSing n)
    in ty <> case t of
               SClock -> mempty
               _      -> width

@@ -1,10 +1,7 @@
-resolver: lts-12.0
+resolver: lts-12.4
 packages:
   - .
-extra-deps:
-  - categories-1.0.7
-  - git: https://github.com/jkopanski/singleton-nats.git
-    commit: b29b02a77e38fdb0ac0c03401e1f2baa1149457a
+extra-deps: []
 # nix:
 #   enable: true
 #   pure: true

@@ -36,6 +36,7 @@ import           Data.HashMap.Strict (HashMap)
 import qualified Data.HashMap.Strict as Map
 -- import           Data.Kind (type (*))
 import           Data.Semigroup      (Semigroup (..))
+import           Data.Width
 
 import qualified Numeric.Natural     as N
 
@@ -43,18 +44,18 @@ import           Firrtl.Lo.Syntax
 import           Firrtl.Lo.TypeCheck.Ty
 
 data Error
-  = ExpectedGround    Ty
-  | ExpectedGroundInt Ty
-  | ExpectedParameter Ty
-  | Mismatch Ty Ty
-  | NodeMale Ty
-  | NotInScope Id (Maybe Ty)
+  = ExpectedGround RTy
+  | ExpectedGroundInt RTy
+  | ExpectedParameter RTy
+  | Mismatch RTy RTy
+  | NodeMale RTy
+  | NotInScope Id (Maybe RTy)
   | NoTopModule Id
-  | ParameterToBig N.Natural Ty
-  | Connectable Ty Ty
-  | Containable Ty Ty
-  | Equivalent Ty Ty
-  | NotEnoughWidth Literal N.Natural
+  | ParameterToBig N.Natural RTy
+  | Connectable RTy RTy
+  | Containable RTy RTy
+  | Equivalent RTy RTy
+  | NotEnoughWidth Literal Width
   deriving Show
 
 -- | Context associate identifiers with type
@@ -76,7 +77,7 @@ lookup ident (Ctx m) = Map.lookup ident m
 -- Check { runCheck :: ExceptT Error (ReaderT Context IO) a }
 -- https://www.fpcomplete.com/blog/2017/07/the-rio-monad
 newtype Check a =
-  Check { runCheck :: ExceptT Error (StateT (Context Ty) Identity) a }
+  Check { runCheck :: ExceptT Error (StateT (Context RTy) Identity) a }
     deriving
       ( Functor
       , Applicative
@@ -87,7 +88,7 @@ deriving instance (ErrorType Check ~ Error) => MonadError Check
 -- deriving instance (StateType Check ~ Context) => MonadState Check
 
 instance MonadState Check where
-  type StateType Check = Context Ty
+  type StateType Check = Context RTy
   get = Check $ lift $ get
   put = Check . lift . put
 

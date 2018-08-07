@@ -3,12 +3,12 @@ module Firrtl.Lo.Parser.Stmt where
 import Prelude hiding (print)
 import Control.Applicative      ((<|>))
 import Data.Functor             (($>))
+import Data.Width
 import Firrtl.Lo.Parser.Expr
 import Firrtl.Lo.Parser.Monad
 import Firrtl.Lo.Syntax.Expr
 import Firrtl.Lo.Syntax.Stmt
 import Firrtl.Lo.TypeCheck.Ty
-import Numeric.Natural          (Natural)
 import Text.Parser.Combinators
 import Text.Parser.Token
 
@@ -68,7 +68,7 @@ typeDecl = clock
        <|> signed
        <|> unsigned
 
-sizedType :: (Monad m, TokenParsing m) => m (TyRtl, Natural)
+sizedType :: (Monad m, TokenParsing m) => m (TyRtl, Width)
 sizedType = do
   ty <- typeDecl
   case ty of

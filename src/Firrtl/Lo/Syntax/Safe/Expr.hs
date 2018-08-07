@@ -23,8 +23,6 @@ module Firrtl.Lo.Syntax.Safe.Expr
   ( ExprF (..)
   , SomeExpr (..)
   , TFix (..)
-  , isCond
-  , typeOf
   , tyrtl
   , width
   , gender
@@ -49,7 +47,7 @@ module Firrtl.Lo.Syntax.Safe.Expr
 import Data.Kind (type (*))
 import Data.Singletons
 import Data.Singletons.TH
-import Data.Nat
+import Data.Width
 
 import Numeric.Natural (Natural)
 
@@ -60,14 +58,14 @@ import Firrtl.Lo.TypeCheck.Ty
 data ExprF :: (Ty -> *) -> Ty -> * where
   -- | Constants
   --   These are 2 separate constructors, to force UInt value to be a Natural.
-  UInt :: forall (s :: TyRtl) (n :: Nat) (g :: Gender) (t :: Ty) (r :: Ty -> *)
+  UInt :: forall (s :: TyRtl) (n :: BW) (g :: Gender) (t :: Ty) (r :: Ty -> *)
        .  ( t ~ '(s, n, g)
           , s ~ 'Unsigned
           , g ~ 'Male
           )
        => Sing t -> Natural -> ExprF r t
 
-  SInt :: forall (s :: TyRtl) (n :: Nat) (g :: Gender) (t :: Ty) (r :: Ty -> *)
+  SInt :: forall (s :: TyRtl) (n :: BW) (g :: Gender) (t :: Ty) (r :: Ty -> *)
        .  ( t ~ '(s, n, g)
           , s ~ 'Signed
           , g ~ 'Male
@@ -85,7 +83,7 @@ data ExprF :: (Ty -> *) -> Ty -> * where
         .  Sing t -> r '( 'Unsigned, Lit 1, 'Male) -> r t -> r t -> ExprF r t
 
   -- | PrimOps with some complex type expr
-  Add :: forall (s1 :: TyRtl) (w1 :: Nat) (s2 :: TyRtl) (w2 :: Nat) (r :: Ty -> *)
+  Add :: forall (s1 :: TyRtl) (w1 :: BW) (s2 :: TyRtl) (w2 :: BW) (r :: Ty -> *)
       .  (NotClock s1 && NotClock s2) ~ 'True
       => r '(s1, w1, 'Male)
       -> r '(s2, w2, 'Male)
@@ -94,12 +92,12 @@ data ExprF :: (Ty -> *) -> Ty -> * where
 data SomeExpr :: * where
   MkSomeExpr :: Sing t -> Expr t -> SomeExpr
 
-mkUInt :: forall (t :: Ty) (n :: Nat)
+mkUInt :: forall (t :: Ty) (n :: BW)
        .  t ~ '( 'Unsigned, n, 'Male)
        => Sing t -> Natural -> Expr t
 mkUInt s n = TFix (UInt s n)
 
-mkSInt :: forall (t :: Ty) (n :: Nat)
+mkSInt :: forall (t :: Ty) (n :: BW)
        .  t ~ '( 'Signed, n, 'Male)
        => Sing t -> Int -> Expr t
 mkSInt s i = TFix (SInt s i)
@@ -147,14 +145,6 @@ hcata alg = alg . tfmap (hcata alg) . unTFix
 newtype K x (t :: Ty) = K { unK :: x }
 newtype I x = I { unI :: x }
  
-isCond :: SomeExpr -> Bool
-isCond expr = case typeOf expr of
-  (Unsigned, 1, Male) -> True
-  _ -> False
-
-typeOf :: SomeExpr -> (TyRtl, Natural, Gender)
-typeOf (MkSomeExpr s _) = tyNat $ fromSing s
-
 tyrtl_ :: Sing s -> ExprF r '(s, n, g) -> TyRtl
 tyrtl_ SSigned   _ = Signed
 tyrtl_ SUnsigned _ = Unsigned
@@ -164,7 +154,7 @@ tyrtl :: SingI s => ExprF r '(s, n, g) -> TyRtl
 tyrtl = tyrtl_ sing
 
 width_ :: Sing n -> ExprF r '(s, n, g) -> Natural
-width_ s _ = nat $ fromSing s
+width_ s _ = unWidth $ fromSing s
 
 width :: SingI n => ExprF r '(s, n, g) -> Natural
 width = width_ sing
