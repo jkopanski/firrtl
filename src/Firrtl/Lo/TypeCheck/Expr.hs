@@ -9,7 +9,7 @@ import Data.Maybe              (fromMaybe)
 import Data.Singletons
 import Data.Singletons.Decide
 import Data.Singletons.Prelude hiding (Error)
-import Data.Nat
+import Data.Width
 import Numeric.Natural
 
 import           Firrtl.Lo.Syntax.Expr
@@ -26,7 +26,7 @@ instance Typed Expr where
     either throwError pure $ cataM (alg ctx) e
 
 -- | this is awesome as actually only statements can extend Context
-alg :: Context Ty -> ExprF Safe.SomeExpr -> Either Error Safe.SomeExpr
+alg :: Context (TyRtl, Width, Gender) -> ExprF Safe.SomeExpr -> Either Error Safe.SomeExpr
 alg ctx (RefF ident) =
   let mty = lookup ident ctx
    in case mty of
@@ -40,7 +40,7 @@ alg _ (LitF l) = case l of
         width = fromMaybe minWidth mwidth
      in if minWidth > width
            then Left $ NotEnoughWidth l minWidth 
-           else Right $ case someNatVal width of
+           else Right $ case toSing (Width width) of
                         SomeSing sn ->
                           let s = STuple3 SUnsigned sn SMale
                            in Safe.fromExpr (Safe.UInt s value)
@@ -50,7 +50,7 @@ alg _ (LitF l) = case l of
         width = fromMaybe minWidth mwidth
      in if minWidth > width
            then Left $ NotEnoughWidth l minWidth 
-           else Right $ case someNatVal width of
+           else Right $ case toSing (Width width) of
                         SomeSing sn ->
                           let s = STuple3 SSigned sn SMale
                            in Safe.fromExpr (Safe.SInt s value)

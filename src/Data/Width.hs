@@ -42,6 +42,8 @@ instance SingKind BW where
 $(genPromotions [''BW])
 $(singEqInstance ''BW)
 $(singDecideInstance ''BW)
+$(singOrdInstance ''BW)
+$(singShowInstance ''BW)
 
 type family BWPlus (a :: BW) (b :: BW) :: BW where
   BWPlus 'O b = 'S b
@@ -111,6 +113,13 @@ instance SNum BW where
       Proved Refl -> SO
       Disproved _ -> unsafeCoerce $
         SS (sFromInteger $ sn %- (sing :: Sing 1))
+
+type family Lit n where
+  Lit 1 = 'O
+  Lit n = 'S (Lit (n - 1))
+$(genDefunSymbols [''Lit])
+
+type SLit n = Sing (Lit n)
 
 -- $(singletons [d|
 --   bwPlus :: BW -> BW -> BW

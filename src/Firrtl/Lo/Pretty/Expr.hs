@@ -9,10 +9,11 @@ import           Data.Singletons
 import           Data.Singletons.Prelude.Tuple
 import           Data.Text.Prettyprint.Doc (Doc)
 import qualified Data.Text.Prettyprint.Doc as Pretty
+import           Data.Width
 
 import Firrtl.Lo.Pretty.Common
 import Firrtl.Lo.Syntax.Safe.Expr
-import Firrtl.Lo.TypeCheck.Ty     (Ty, nat)
+import Firrtl.Lo.TypeCheck.Ty     (Ty)
 
 
 pretty :: forall (t :: Ty). Expr t -> Doc Ann
@@ -20,11 +21,11 @@ pretty = unK . hcata prettyExprAlg
 
 prettyExprAlg :: forall (t :: Ty). ExprF (K (Doc Ann)) t -> K (Doc Ann) t
 prettyExprAlg (UInt (STuple3 _ n _) u) = K $
-  keyword "UInt" <> angles (Pretty.pretty (nat (fromSing n)))
+  keyword "UInt" <> angles (Pretty.pretty (unWidth (fromSing n)))
                  <> parens (literal $ Pretty.pretty u)
 
 prettyExprAlg (SInt (STuple3 _ n _) u) = K $
-  keyword "SInt" <> angles (Pretty.pretty (nat (fromSing n)))
+  keyword "SInt" <> angles (Pretty.pretty (unWidth (fromSing n)))
                  <> parens (literal $ Pretty.pretty u)
 
 prettyExprAlg (Ref s id) = K $ reference $ Pretty.pretty id

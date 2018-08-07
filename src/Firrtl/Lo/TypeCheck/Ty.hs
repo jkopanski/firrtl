@@ -23,9 +23,9 @@ Type is a triple, cointaining:
 module Firrtl.Lo.TypeCheck.Ty where
 
 import Data.Singletons.TH
-import Data.Nat
+import Data.Singletons.Prelude.Tuple
 import Data.Type.Bool
-import Numeric.Natural (Natural)
+import Data.Width
 
 $(singletons [d|
   data Gender = Bi | Female | Male
@@ -34,18 +34,24 @@ $(singletons [d|
   data TyRtl = Clock | Signed | Unsigned
     deriving (Eq, Show)
 
-  type Ty  = (TyRtl, Nat, Gender)
+  type Ty = (TyRtl, BW, Gender)
 
   |])
 
-nat :: Nat -> Natural
-nat Z = 0
-nat (S n) = 1 + nat n
 
-tyNat :: Ty -> (TyRtl, Natural, Gender)
-tyNat (t, n, g) = (t, nat n, g)
+-- deriving instance Show (Sing Ty)
 
-pattern SOne = SS SZ
+-- | Runtime type value
+type RTy  = (TyRtl, Width, Gender)
+
+-- nat :: Nat -> Natural
+-- nat Z = 0
+-- nat (S n) = 1 + nat n
+
+-- tyNat :: Ty -> (TyRtl, Natural, Gender)
+-- tyNat (t, n, g) = (t, nat n, g)
+
+pattern SOne = SO
 pattern STwo = SS SOne
 pattern SFour = SS (SS STwo)
 

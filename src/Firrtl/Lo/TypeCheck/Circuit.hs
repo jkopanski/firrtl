@@ -7,7 +7,7 @@ module Firrtl.Lo.TypeCheck.Circuit where
 import Control.Monad.Except (throwError)
 import qualified Data.List.NonEmpty as NE
 import Data.Singletons.Prelude hiding (Error)
-import Data.Nat
+import Data.Width
 
 import qualified Firrtl.Lo.Syntax.Safe as Safe
 import           Firrtl.Lo.Syntax.Circuit
@@ -50,7 +50,7 @@ instance Typed Module where
     put save
     pure (Safe.Module ident safePorts safeBody)
 
-      where addPort :: Safe.SomePort -> Context Ty -> Context Ty
+      where addPort :: Safe.SomePort -> Context RTy -> Context RTy
             addPort (Safe.MkSomePort s (Safe.Port name)) ctx =
               insert name (FromSing s) ctx
 
@@ -60,7 +60,7 @@ instance Typed Port where
   typeSafe :: Port -> Check Safe.SomePort
   typeSafe (Port ident (t, n, g)) =
     let mk = Safe.MkSomePort
-     in pure $ case someNatVal n of
+     in pure $ case toSing (Width n) of
       SomeSing sn -> case (t, g) of
         (Clock   , Bi    ) -> mk (STuple3 SClock    sn SBi    ) (Safe.Port ident)
         (Clock   , Female) -> mk (STuple3 SClock    sn SFemale) (Safe.Port ident)
