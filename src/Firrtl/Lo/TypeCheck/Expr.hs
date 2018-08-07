@@ -10,7 +10,7 @@ import Data.Singletons
 import Data.Singletons.Decide
 import Data.Singletons.Prelude hiding (Error)
 import Data.Width
-import Numeric.Natural
+import Numeric.Natural         (Natural)
 
 import           Firrtl.Lo.Syntax.Expr
 import qualified Firrtl.Lo.Syntax.Safe as Safe

@@ -120,35 +120,3 @@ type family Lit n where
 $(genDefunSymbols [''Lit])
 
 type SLit n = Sing (Lit n)
-
--- $(singletons [d|
---   bwPlus :: BW -> BW -> BW
---   bwPlus O b = S b
---   bwPlus (S a) b = S (bwPlus a b)
-
---   bwMul :: BW -> BW -> BW
---   bwMul O b = b
---   bwMul (S a) b = bwPlus b (bwMul a b)
-
---   bwMinus :: BW -> BW -> BW
---   bwMinus O _ = O
---   bwMinus (S a) (S b) = bwMinus a b
---   bwMinus (S a) O = a
-
---   bwAbs :: BW -> BW
---   bwAbs n = n
-
---   bwSignum :: BW -> BW
---   bwSignum _ = O
-
---   instance Num BW where
---     (+) = bwPlus
---     (-) = bwMinus
---     (*) = bwMul
---     abs = bwAbs
---     signum = bwSignum
---     fromInteger n
---       = if n == 1
---            then O
---            else S (fromInteger (n - 1))
---   |])
