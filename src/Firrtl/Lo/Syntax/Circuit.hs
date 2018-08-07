@@ -1,7 +1,6 @@
 module Firrtl.Lo.Syntax.Circuit where
 
 import Data.List.NonEmpty (NonEmpty)
-import Numeric.Natural (Natural)
 
 import Firrtl.Lo.Syntax.Common
 import Firrtl.Lo.Syntax.Stmt
@@ -21,7 +20,7 @@ data Module
   deriving (Eq, Show)
 
 data Port = Port Id       -- port name
-                 (TyRtl, Natural, Gender)  -- port type
+                 RTy
   deriving (Eq, Show)
 
 moduleName :: Module -> Id

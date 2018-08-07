@@ -40,7 +40,7 @@ alg _ (LitF l) = case l of
         width = fromMaybe minWidth mwidth
      in if minWidth > width
            then Left $ NotEnoughWidth l minWidth 
-           else Right $ case toSing (Width width) of
+           else Right $ case toSing width of
                         SomeSing sn ->
                           let s = STuple3 SUnsigned sn SMale
                            in Safe.fromExpr (Safe.UInt s value)
@@ -50,7 +50,7 @@ alg _ (LitF l) = case l of
         width = fromMaybe minWidth mwidth
      in if minWidth > width
            then Left $ NotEnoughWidth l minWidth 
-           else Right $ case toSing (Width width) of
+           else Right $ case toSing width of
                         SomeSing sn ->
                           let s = STuple3 SSigned sn SMale
                            in Safe.fromExpr (Safe.SInt s value)
@@ -69,14 +69,14 @@ alg _ (MuxF (Safe.MkSomeExpr sc ec) (Safe.MkSomeExpr sl el) (Safe.MkSomeExpr sr 
       Disproved _ -> Left $ NoTopModule "same type"
     _ -> Left $ NoTopModule "conditional signal"
 
-minUIntBitWidth :: Natural -> Natural
+minUIntBitWidth :: Natural -> Width
 minUIntBitWidth = (+) 1
             . fromIntegral
             . (floor :: Double -> Int)
             . logBase 2
             . fromIntegral
 
-minSIntBitWidth :: Int -> Natural
+minSIntBitWidth :: Int -> Width
 minSIntBitWidth x | x > 0 = 1 + minUIntBitWidth (fromIntegral x)
                   | otherwise = ( (+) 1
                                 . fromIntegral

@@ -55,7 +55,7 @@ data Error
   | Connectable RTy RTy
   | Containable RTy RTy
   | Equivalent RTy RTy
-  | NotEnoughWidth Literal N.Natural
+  | NotEnoughWidth Literal Width
   deriving Show
 
 -- | Context associate identifiers with type

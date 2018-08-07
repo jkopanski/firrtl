@@ -60,7 +60,7 @@ instance Typed Port where
   typeSafe :: Port -> Check Safe.SomePort
   typeSafe (Port ident (t, n, g)) =
     let mk = Safe.MkSomePort
-     in pure $ case toSing (Width n) of
+     in pure $ case toSing n of
       SomeSing sn -> case (t, g) of
         (Clock   , Bi    ) -> mk (STuple3 SClock    sn SBi    ) (Safe.Port ident)
         (Clock   , Female) -> mk (STuple3 SClock    sn SFemale) (Safe.Port ident)
