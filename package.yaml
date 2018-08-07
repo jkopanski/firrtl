@@ -4,8 +4,7 @@ synopsis:            FIRRTL haskell implementation.
 description: >
   @FIRRTL@ goal is to be the same as LLVM IR to digital hardware.
 license:             BSD3
-homepage:            null
-git:                 keybase://team/quivade/screwdriver
+github:              jkopanski/firrtl
 author:
   - Jakub Kopański <jkopanski@protonmail.com>
   - Przemysław Kopański <pkopanski@protonmail.com>
