@@ -38,18 +38,8 @@ $(singletons [d|
 
   |])
 
-
--- deriving instance Show (Sing Ty)
-
 -- | Runtime type value
 type RTy  = (TyRtl, Width, Gender)
-
--- nat :: Nat -> Natural
--- nat Z = 0
--- nat (S n) = 1 + nat n
-
--- tyNat :: Ty -> (TyRtl, Natural, Gender)
--- tyNat (t, n, g) = (t, nat n, g)
 
 pattern SOne = SO
 pattern STwo = SS SOne

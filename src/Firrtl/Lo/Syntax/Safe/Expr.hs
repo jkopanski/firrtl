@@ -23,6 +23,7 @@ module Firrtl.Lo.Syntax.Safe.Expr
   ( ExprF (..)
   , SomeExpr (..)
   , TFix (..)
+  , type (:~>)
   , tyrtl
   , width
   , gender
@@ -83,11 +84,14 @@ data ExprF :: (Ty -> *) -> Ty -> * where
         .  Sing t -> r '( 'Unsigned, Lit 1, 'Male) -> r t -> r t -> ExprF r t
 
   -- | PrimOps with some complex type expr
-  Add :: forall (s1 :: TyRtl) (w1 :: BW) (s2 :: TyRtl) (w2 :: BW) (r :: Ty -> *)
-      .  (NotClock s1 && NotClock s2) ~ 'True
-      => r '(s1, w1, 'Male)
+  Add :: forall (t :: Ty) (s1 :: TyRtl) (w1 :: BW) (s2 :: TyRtl) (w2 :: BW) (r :: Ty -> *)
+      .  ( (NotClock s1 && NotClock s2) ~ 'True
+         , t ~ AddTy s1 w1 s2 w2
+         )
+      => Sing t
+      -> r '(s1, w1, 'Male)
       -> r '(s2, w2, 'Male)
-      -> ExprF r (AddTy s1 w1 s2 w2)
+      -> ExprF r t
 
 data SomeExpr :: * where
   MkSomeExpr :: Sing t -> Expr t -> SomeExpr
