@@ -12,6 +12,7 @@ import Data.Singletons.Prelude.Tuple
 import Data.Width
 import Firrtl.Lo.TypeCheck.Ty
 
+-- TODO: make Validity a HKT and write down some typial instances
 data Value :: Ty -> * where
   Invalid :: Value t
   Valid   :: Sing t -> !Int -> Value t

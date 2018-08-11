@@ -25,12 +25,16 @@ evalAlg _ (SE.SInt s i) = Valid s i
 evalAlg env (SE.Ref s ident) = Valid s (fromJust $ lookup ident env)
 
 evalAlg _ (SE.Valid _ cond sig) =
-  if cond == zero then Invalid
-                  else sig
+  -- It is better to test for one to take advantage of:
+  -- Invalid == _ = False
+  if cond == one then sig
+                 else Invalid
 
 evalAlg _ (SE.Mux _ cond a b) =
-  if cond == zero then a
-                  else b
+  -- It is better to test for one to take advantage of:
+  -- Invalid == _ = False
+  if cond == one then b
+                 else a
 
 evalAlg _ (SE.Add s a b) =
   let limit = withSingI s maxBound

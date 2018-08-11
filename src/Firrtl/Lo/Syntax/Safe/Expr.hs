@@ -37,6 +37,7 @@ module Firrtl.Lo.Syntax.Safe.Expr
   , mkRef
   , mkValid
   , mkMux
+  , mkAdd
 
   -- Traversals
   , TFunctor (..)
@@ -115,6 +116,17 @@ mkValid s c v = TFix (Valid s c v)
 mkMux :: Sing t -> Expr '( 'Unsigned, Lit 1, 'Male) -> Expr t -> Expr t -> Expr t
 mkMux s c l r = TFix (Mux s c l r)
 
+mkAdd
+  :: forall (t :: Ty) (s1 :: TyRtl) (w1 :: BW) (s2 :: TyRtl) (w2 :: BW) (r :: Ty -> *)
+  .  ( (NotClock s1 && NotClock s2) ~ 'True
+     , t ~ AddTy s1 w1 s2 w2
+     )
+  => Sing t
+  -> Expr '(s1, w1, 'Male)
+  -> Expr '(s2 ,w2, 'Male)
+  -> Expr t
+mkAdd s a b = TFix (Add s a b)
+
 fromExpr :: ExprF (TFix ExprF) t -> SomeExpr
 fromExpr e = case e of
   UInt s _ -> MkSomeExpr s (TFix e)
@@ -141,6 +153,7 @@ instance TFunctor ExprF where
   tfmap _ (Ref  s i) = Ref  s i
   tfmap f (Valid s cond sig) = Valid s (f cond) (f sig)
   tfmap f (Mux   s cond a b) = Mux s (f cond) (f a) (f b)
+  tfmap f (Add s a b) = Add s (f a) (f b)
 
 hcata :: TFunctor h => (h f :~> f) -> TFix h :~> f
 hcata alg = alg . tfmap (hcata alg) . unTFix
