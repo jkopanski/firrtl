@@ -60,18 +60,12 @@ import Firrtl.Lo.TypeCheck.Ty
 data ExprF :: (Ty -> *) -> Ty -> * where
   -- | Constants
   --   These are 2 separate constructors, to force UInt value to be a Natural.
-  UInt :: forall (s :: TyRtl) (n :: BW) (g :: Gender) (t :: Ty) (r :: Ty -> *)
-       .  ( t ~ '(s, n, g)
-          , s ~ 'Unsigned
-          , g ~ 'Male
-          )
+  UInt :: forall (n :: BW) (t :: Ty) (r :: Ty -> *)
+       .  t ~ '( 'Unsigned, n, 'Male)
        => Sing t -> Natural -> ExprF r t
 
-  SInt :: forall (s :: TyRtl) (n :: BW) (g :: Gender) (t :: Ty) (r :: Ty -> *)
-       .  ( t ~ '(s, n, g)
-          , s ~ 'Signed
-          , g ~ 'Male
-          )
+  SInt :: forall (n :: BW) (t :: Ty) (r :: Ty -> *)
+       .  t ~ '( 'Signed, n, 'Male)
        => Sing t -> Int     -> ExprF r t
 
   Ref  :: forall (t :: Ty) (r :: Ty -> *)
@@ -117,7 +111,7 @@ mkMux :: Sing t -> Expr '( 'Unsigned, Lit 1, 'Male) -> Expr t -> Expr t -> Expr 
 mkMux s c l r = TFix (Mux s c l r)
 
 mkAdd
-  :: forall (t :: Ty) (s1 :: TyRtl) (w1 :: BW) (s2 :: TyRtl) (w2 :: BW) (r :: Ty -> *)
+  :: forall (t :: Ty) (s1 :: TyRtl) (w1 :: BW) (s2 :: TyRtl) (w2 :: BW)
   .  ( (NotClock s1 && NotClock s2) ~ 'True
      , t ~ AddTy s1 w1 s2 w2
      )

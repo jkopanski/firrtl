@@ -1,4 +1,6 @@
-{-# language TypeApplications #-}
+{-# language
+        TypeApplications
+      , TypeInType #-}
 module Interpret.Eval where
 
 import Data.Width
@@ -11,32 +13,33 @@ import           Firrtl.Lo.Interpret.Value
 import           Firrtl.Lo.TypeCheck.Monad
 import           Firrtl.Lo.TypeCheck.Ty
 
-import Test.Hspec
 import Test.Tasty
 import Test.Tasty.HUnit
 
 -- | some predefined constants
+bit :: Sing '( 'Unsigned, Lit 1, 'Male)
 bit   = STuple3 SUnsigned SO SMale
 false = SE.mkUInt bit 0
 true  = SE.mkUInt bit 1
 invalidCond = SE.mkValid bit false true
 
-bw4UInt = STuple3 SUnsigned (sLit @4) SMale
-one', two, three, four :: Value '( 'Unsigned, Lit 4, 'Male)
-one'  = Valid bw4UInt 1
-two   = Valid bw4UInt 2
-three = Valid bw4UInt 3
-four  = Valid bw4UInt 4
+zero, one', two, three, four :: Maybe Value -- '( 'Unsigned, Lit 4, 'Male)
+zero  = Just 0
+one'  = Just 1
+two   = Just 2
+three = Just 3
+four  = Just 4
 
+bw4UInt = STuple3 SUnsigned (sLit @4) SMale
 exprUInt :: Natural -> SE.Expr '( 'Unsigned, Lit 4, 'Male)
 exprUInt n = SE.mkUInt bw4UInt n
 
-bw4SInt = STuple3 SSigned (sLit @4) SMale
-mone, mtwo, mthree :: Value '( 'Signed, Lit 4, 'Male)
-mone   = Valid bw4SInt (-1)
-mtwo   = Valid bw4SInt (-2)
-mthree = Valid bw4SInt (-3)
+mone, mtwo, mthree :: Maybe Value -- '( 'Signed, Lit 4, 'Male)
+mone   = Just (-1)
+mtwo   = Just (-2)
+mthree = Just (-3)
 
+bw4SInt = STuple3 SSigned (sLit @4) SMale
 exprSInt :: Int -> SE.Expr '( 'Signed, Lit 4, 'Male)
 exprSInt i = SE.mkSInt bw4SInt i
 
@@ -95,13 +98,13 @@ evalExprTests = testGroup "expression evaluator tests"
                    bw4SInt
                    false
                    (exprSInt (-1))
-                   (exprSInt (-3))) @?= mone
+                   (exprSInt (-3))) @?= mthree
     , testCase "all valid, cond 1" $
         eval ctx (SE.mkMux
                    bw4SInt
                    true
                    (exprSInt (-1))
-                   (exprSInt (-3))) @?= mthree
+                   (exprSInt (-3))) @?= mone
     , testCase "invalid cond" $
         assertBool "produces valid output" $
           eval ctx
@@ -117,14 +120,15 @@ evalExprTests = testGroup "expression evaluator tests"
               bw4SInt
               false
               (SE.mkValid bw4SInt false (exprSInt (-1)))
-              (exprSInt (-3))) /= mone
+              (exprSInt (-3))) /= mthree
     , testCase "valid cond, invalid sig" $
-        eval ctx
-          (SE.mkMux
-            bw4SInt
-            true
-            (SE.mkValid bw4SInt false (exprSInt (-1)))
-            (exprSInt (-3))) @?= mthree
+        assertBool "produces valid output" $
+          eval ctx
+            (SE.mkMux
+               bw4SInt
+               true
+               (SE.mkValid bw4SInt false (exprSInt (-1)))
+               (exprSInt (-3))) /= mone
     ]
   , testGroup "add"
     [ testCase "both UInt max" $
@@ -133,27 +137,27 @@ evalExprTests = testGroup "expression evaluator tests"
             (STuple3 SUnsigned (sLit @5) SMale)
             (exprUInt (15))
             (exprUInt (15)))
-          @?= Valid (STuple3 SUnsigned (sLit @5) SMale) 30
+          @?= Just 30
     , testCase "UInt max, SInt min" $
         eval ctx
           (SE.mkAdd
             (STuple3 SSigned (sLit @6) SMale)
             (exprUInt (8))
             (exprSInt (-8)))
-          @?= Valid (STuple3 SSigned (sLit @6) SMale) 0 
+          @?= zero
     , testCase "SInt max, UInt max" $
         eval ctx
           (SE.mkAdd
             (STuple3 SSigned (sLit @6) SMale)
             (exprSInt (7))
             (exprUInt (15)))
-          @?= Valid (STuple3 SSigned (sLit @6) SMale) 22 
+          @?= Just 22
     , testCase "SInt max, SInt min" $
         eval ctx
           (SE.mkAdd
             (STuple3 SSigned (sLit @5) SMale)
             (exprSInt (7))
             (exprSInt (-8)))
-          @?= Valid (STuple3 SSigned (sLit @5) SMale) (-1)
+          @?= Just (-1)
     ]
   ]

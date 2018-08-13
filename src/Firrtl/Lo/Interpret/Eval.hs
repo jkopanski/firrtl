@@ -2,48 +2,42 @@
 module Firrtl.Lo.Interpret.Eval where
 
 import Prelude hiding (lookup)
--- import Data.Kind  (type (*))
-import Data.Maybe (fromJust)
-import Data.Singletons
 
 import           Firrtl.Lo.Interpret.Value
 import qualified Firrtl.Lo.Syntax.Safe.Expr as SE
 import           Firrtl.Lo.TypeCheck.Monad
 import           Firrtl.Lo.TypeCheck.Ty
 
-eval :: forall (t :: Ty). Context Int -> SE.Expr t -> Value t
-eval env = SE.hcata (evalAlg env)
+eval :: forall (t :: Ty). Context Int -> SE.Expr t -> Maybe Value
+eval env = SE.unK . SE.hcata (evalAlg env)
 
 evalAlg
   :: forall (t :: Ty)
   .  Context Int
-  -> SE.ExprF Value t
-  -> Value t
-evalAlg _ (SE.UInt s u) = Valid s (fromIntegral u)  
-evalAlg _ (SE.SInt s i) = Valid s i
--- TypeChecking should make us suer that we have Just here
-evalAlg env (SE.Ref s ident) = Valid s (fromJust $ lookup ident env)
+  -> SE.ExprF (SE.K (Maybe Value)) t
+  -> SE.K (Maybe Value) t
+evalAlg _ (SE.UInt _ n) = SE.K (Just (fromIntegral n))
 
-evalAlg _ (SE.Valid _ cond sig) =
-  -- It is better to test for one to take advantage of:
-  -- Invalid == _ = False
-  if cond == one then sig
-                 else Invalid
+evalAlg _ (SE.SInt _ i) = SE.K (Just i)
 
-evalAlg _ (SE.Mux _ cond a b) =
-  -- It is better to test for one to take advantage of:
-  -- Invalid == _ = False
-  if cond == one then b
-                 else a
+-- | if name is not found then we have dangling connection
+-- and its value is not valid - Nothing
+evalAlg env (SE.Ref _ ident) = SE.K (lookup ident env)
 
-evalAlg _ (SE.Add s a b) =
-  let limit = withSingI s maxBound
-   in case (a, b) of
-        (Valid _ va, Valid _ vb) ->
-          let new = va + vb
-              -- TODO: check me, but I think typesystem makes this impossible
-              val = if new > limit
-                       then new - limit
-                       else new
-           in Valid s val
-        _ -> Invalid
+evalAlg _ (SE.Valid _ cond sig) = SE.K $
+  SE.unK cond >>= \c ->
+  SE.unK sig  >>= \s ->
+    if c == 1
+       then Just s
+       else Nothing
+
+evalAlg _ (SE.Mux _ cond ma mb) = SE.K $
+  SE.unK cond >>= \c ->
+  SE.unK ma   >>= \a ->
+  SE.unK mb   >>= \b ->
+    if c == 0
+       then Just b
+       else Just a
+
+evalAlg _ (SE.Add _ ma mb) = SE.K $
+  (+) <$> SE.unK ma <*> SE.unK mb
