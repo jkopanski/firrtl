@@ -23,6 +23,7 @@ module Firrtl.Lo.Syntax.Safe.Expr
   ( ExprF (..)
   , SomeExpr (..)
   , TFix (..)
+  , type (:~>)
   , tyrtl
   , width
   , gender
@@ -36,6 +37,7 @@ module Firrtl.Lo.Syntax.Safe.Expr
   , mkRef
   , mkValid
   , mkMux
+  , mkAdd
 
   -- Traversals
   , TFunctor (..)
@@ -58,18 +60,12 @@ import Firrtl.Lo.TypeCheck.Ty
 data ExprF :: (Ty -> *) -> Ty -> * where
   -- | Constants
   --   These are 2 separate constructors, to force UInt value to be a Natural.
-  UInt :: forall (s :: TyRtl) (n :: BW) (g :: Gender) (t :: Ty) (r :: Ty -> *)
-       .  ( t ~ '(s, n, g)
-          , s ~ 'Unsigned
-          , g ~ 'Male
-          )
+  UInt :: forall (n :: BW) (t :: Ty) (r :: Ty -> *)
+       .  t ~ '( 'Unsigned, n, 'Male)
        => Sing t -> Natural -> ExprF r t
 
-  SInt :: forall (s :: TyRtl) (n :: BW) (g :: Gender) (t :: Ty) (r :: Ty -> *)
-       .  ( t ~ '(s, n, g)
-          , s ~ 'Signed
-          , g ~ 'Male
-          )
+  SInt :: forall (n :: BW) (t :: Ty) (r :: Ty -> *)
+       .  t ~ '( 'Signed, n, 'Male)
        => Sing t -> Int     -> ExprF r t
 
   Ref  :: forall (t :: Ty) (r :: Ty -> *)
@@ -83,11 +79,14 @@ data ExprF :: (Ty -> *) -> Ty -> * where
         .  Sing t -> r '( 'Unsigned, Lit 1, 'Male) -> r t -> r t -> ExprF r t
 
   -- | PrimOps with some complex type expr
-  Add :: forall (s1 :: TyRtl) (w1 :: BW) (s2 :: TyRtl) (w2 :: BW) (r :: Ty -> *)
-      .  (NotClock s1 && NotClock s2) ~ 'True
-      => r '(s1, w1, 'Male)
+  Add :: forall (t :: Ty) (s1 :: TyRtl) (w1 :: BW) (s2 :: TyRtl) (w2 :: BW) (r :: Ty -> *)
+      .  ( (NotClock s1 && NotClock s2) ~ 'True
+         , t ~ AddTy s1 w1 s2 w2
+         )
+      => Sing t
+      -> r '(s1, w1, 'Male)
       -> r '(s2, w2, 'Male)
-      -> ExprF r (AddTy s1 w1 s2 w2)
+      -> ExprF r t
 
 data SomeExpr :: * where
   MkSomeExpr :: Sing t -> Expr t -> SomeExpr
@@ -110,6 +109,17 @@ mkValid s c v = TFix (Valid s c v)
 
 mkMux :: Sing t -> Expr '( 'Unsigned, Lit 1, 'Male) -> Expr t -> Expr t -> Expr t
 mkMux s c l r = TFix (Mux s c l r)
+
+mkAdd
+  :: forall (t :: Ty) (s1 :: TyRtl) (w1 :: BW) (s2 :: TyRtl) (w2 :: BW)
+  .  ( (NotClock s1 && NotClock s2) ~ 'True
+     , t ~ AddTy s1 w1 s2 w2
+     )
+  => Sing t
+  -> Expr '(s1, w1, 'Male)
+  -> Expr '(s2 ,w2, 'Male)
+  -> Expr t
+mkAdd s a b = TFix (Add s a b)
 
 fromExpr :: ExprF (TFix ExprF) t -> SomeExpr
 fromExpr e = case e of
@@ -137,6 +147,7 @@ instance TFunctor ExprF where
   tfmap _ (Ref  s i) = Ref  s i
   tfmap f (Valid s cond sig) = Valid s (f cond) (f sig)
   tfmap f (Mux   s cond a b) = Mux s (f cond) (f a) (f b)
+  tfmap f (Add s a b) = Add s (f a) (f b)
 
 hcata :: TFunctor h => (h f :~> f) -> TFix h :~> f
 hcata alg = alg . tfmap (hcata alg) . unTFix

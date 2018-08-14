@@ -1,5 +1,6 @@
 {-# language
-        EmptyCase
+        AllowAmbiguousTypes
+      , EmptyCase
       , ScopedTypeVariables
       , TemplateHaskell #-}
 module Data.Width where
@@ -120,3 +121,14 @@ type family Lit n where
 $(genDefunSymbols [''Lit])
 
 type SLit n = Sing (Lit n)
+
+{-| Shorthand for 'SNat' literals using `TypeApplications`.
+
+>>> :set -XTypeApplications
+>>> sLit @5
+SS (SS (SS (SS (SS SZ))))
+
+-}
+
+sLit :: forall (n :: Nat). SingI (Lit n) => Sing (Lit n)
+sLit = sing
