@@ -26,18 +26,15 @@ evalAlg env (SE.Ref _ ident) = SE.K (lookup ident env)
 
 evalAlg _ (SE.Valid _ cond sig) = SE.K $
   SE.unK cond >>= \c ->
-  SE.unK sig  >>= \s ->
     if c == 1
-       then Just s
+       then SE.unK sig  >>= \s -> Just s
        else Nothing
 
 evalAlg _ (SE.Mux _ cond ma mb) = SE.K $
   SE.unK cond >>= \c ->
-  SE.unK ma   >>= \a ->
-  SE.unK mb   >>= \b ->
     if c == 0
-       then Just b
-       else Just a
+       then SE.unK mb >>= \b -> Just b
+       else SE.unK ma >>= \a -> Just a
 
 evalAlg _ (SE.Add _ ma mb) = SE.K $
   (+) <$> SE.unK ma <*> SE.unK mb

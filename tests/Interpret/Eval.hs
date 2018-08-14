@@ -114,13 +114,12 @@ evalExprTests = testGroup "expression evaluator tests"
               (exprSInt (-1))
               (exprSInt (-3))) /= mone
     , testCase "valid cond, invalid sig" $
-        assertBool "produces valid output" $
-          eval ctx
-            (SE.mkMux
-              bw4SInt
-              false
-              (SE.mkValid bw4SInt false (exprSInt (-1)))
-              (exprSInt (-3))) /= mthree
+        eval ctx
+          (SE.mkMux
+            bw4SInt
+            false
+            (SE.mkValid bw4SInt false (exprSInt (-1)))
+            (exprSInt (-3))) @?= mthree
     , testCase "valid cond, invalid sig" $
         assertBool "produces valid output" $
           eval ctx
