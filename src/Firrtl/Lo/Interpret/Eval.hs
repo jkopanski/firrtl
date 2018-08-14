@@ -22,6 +22,10 @@ evalAlg _ (SE.SInt _ i) = SE.K (Just i)
 
 -- | if name is not found then we have dangling connection
 -- and its value is not valid - Nothing
+-- although wires and nodes should have been always connected
+-- and regs should contain old value in case of not connected
+-- it seems that our typechecker won't find those cases yet
+-- TODO: add connection checking step?
 evalAlg env (SE.Ref _ ident) = SE.K (lookup ident env)
 
 evalAlg _ (SE.Valid _ cond sig) = SE.K $
