@@ -14,6 +14,7 @@ module Firrtl.Lo.TypeCheck.Monad
   , insert
   , lookup
   , singleton
+  , delete
 
   -- Errors
   , Error (..)
@@ -72,6 +73,9 @@ insert ident ty (Ctx m) = Ctx (Map.insert ident ty m)
 
 lookup :: Id -> Context t -> Maybe t
 lookup ident (Ctx m) = Map.lookup ident m
+
+delete :: Id -> Context t -> Context t
+delete ident (Ctx m) = Ctx (Map.delete ident m)
 
 -- Should we go ReaderT and mutate it's context?
 -- Check { runCheck :: ExceptT Error (ReaderT Context IO) a }
