@@ -12,7 +12,6 @@ import Firrtl.Lo.TypeCheck.Monad
 import Firrtl.Lo.TypeCheck.Ty
 import Firrtl.Lo.Interpret.Eval
 import Firrtl.Lo.Interpret.Monad
-import Firrtl.Lo.Interpret.Value
 
 connectionTarget
   :: forall (t :: Ty) (s :: TyRtl) (w :: BW) (g :: Gender)
