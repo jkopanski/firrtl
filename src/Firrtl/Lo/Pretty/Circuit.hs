@@ -51,8 +51,8 @@ prettyPort
 prettyPort (MkSomePort portty@(STuple3 _ _ g) (Port ident)) =
   let direction = keyword $ case g of
         SBi     -> "inout"
-        SFemale -> "input"
-        SMale   -> "output"
+        SFemale -> "output"
+        SMale   -> "input"
       pid = Pretty.pretty ident 
       pt = prettyTy portty 
    in PPort direction pid pt

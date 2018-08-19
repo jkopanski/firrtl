@@ -1,6 +1,7 @@
-circuit Trivial :
+n1circuit Trivial :
   module Trivial :
-    input a: UInt<4>
+    input clock: Clock
+    input reset: UInt<1>
     output b: UInt<4>
 
-    b <= a
+    b <= UInt<4>("b0010")

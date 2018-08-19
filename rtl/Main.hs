@@ -7,6 +7,7 @@ import qualified Firrtl.Lo.Parser    as Parser
 import qualified Firrtl.Lo.Pretty    as Pretty
 import qualified Firrtl.Lo.Syntax    as Syntax
 import qualified Firrtl.Lo.TypeCheck as Check
+import qualified Firrtl.Lo.Interpret.Circuit as Interpret
 import qualified Text.Megaparsec
 
 import Args (file, options)
@@ -20,8 +21,11 @@ main = do
     Left e -> fail $ Text.Megaparsec.parseErrorPretty' text e
     Right (Syntax.Top ast) -> pure ast
 
-  case Check.check ast of
-    Right typed -> T.putStrLn $ Pretty.terminal typed
+  circ <- case Check.check ast of
+    Right typed -> do
+      T.putStrLn $ Pretty.terminal typed
+      pure typed
     Left err    -> fail $ show err
 
-  putStrLn "Ok!"
+  let res = Interpret.simulate circ
+  print (Check.unCtx res)

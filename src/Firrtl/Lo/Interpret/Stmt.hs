@@ -13,6 +13,8 @@ import Firrtl.Lo.TypeCheck.Ty
 import Firrtl.Lo.Interpret.Eval
 import Firrtl.Lo.Interpret.Monad
 
+import Debug.Trace
+
 connectionTarget
   :: forall (t :: Ty) (s :: TyRtl) (w :: BW) (g :: Gender)
   .  ( IsValidLHS g ~ 'True
@@ -24,8 +26,9 @@ connectionTarget
 connectionTarget _ (SE.TFix (SE.Ref _ ident)) = Just ident
 connectionTarget env (SE.TFix (SE.Mux _ cond a b)) =
   eval env cond >>= \c ->
-    connectionTarget env $ if c == 1 then a
-                                     else b
+    connectionTarget env $ if c == 1
+                              then a
+                              else b
 
 connectionTarget env (SE.TFix (SE.Valid _ cond sig)) =
   eval env cond >>= \c ->
@@ -43,8 +46,9 @@ interpret (Block stmts) = sequence_ (interpret <$> stmts)
 interpret (Connect lhs rhs) = do
   ctx <- ask
   st  <- get
-  let mtarget = connectionTarget (ctx <> st) lhs
-      mval    = eval ctx rhs
+  let env = ctx <> st
+      mtarget = connectionTarget env lhs
+      mval    = eval env rhs
       action  = case mtarget of
         Just ident -> case mval of
           Just val -> insert ident val

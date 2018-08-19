@@ -17,6 +17,8 @@ import qualified Firrtl.Lo.Syntax.Safe as Safe
 import           Firrtl.Lo.TypeCheck.Monad
 import           Firrtl.Lo.TypeCheck.Ty
 
+import Debug.Trace
+
 instance Typed Expr where
   type TypeSafe Expr = Safe.SomeExpr
 
@@ -36,8 +38,8 @@ alg ctx (RefF ident) =
 
 alg _ (LitF l) = case l of
   UInt mwidth value ->
-    let minWidth = minUIntBitWidth value
-        width = fromMaybe minWidth mwidth
+    let minWidth = traceShow value $ minUIntBitWidth value
+        width = traceShow (minUIntBitWidth 0) $ traceShow minWidth $ fromMaybe minWidth mwidth
      in if minWidth > width
            then Left $ NotEnoughWidth l minWidth 
            else Right $ case toSing width of
