@@ -38,10 +38,10 @@ alg ctx (RefF ident) =
 
 alg _ (LitF l) = case l of
   UInt mwidth value ->
-    let minWidth = traceShow value $ minUIntBitWidth value
-        width = traceShow (minUIntBitWidth 0) $ traceShow minWidth $ fromMaybe minWidth mwidth
+    let minWidth = minUIntBitWidth value
+        width = fromMaybe minWidth mwidth
      in if minWidth > width
-           then Left $ NotEnoughWidth l minWidth 
+           then Left $ NotEnoughWidth l minWidth
            else Right $ case toSing width of
                         SomeSing sn ->
                           let s = STuple3 SUnsigned sn SMale
@@ -51,7 +51,7 @@ alg _ (LitF l) = case l of
     let minWidth = minSIntBitWidth value
         width = fromMaybe minWidth mwidth
      in if minWidth > width
-           then Left $ NotEnoughWidth l minWidth 
+           then Left $ NotEnoughWidth l minWidth
            else Right $ case toSing width of
                         SomeSing sn ->
                           let s = STuple3 SSigned sn SMale
@@ -75,7 +75,7 @@ minUIntBitWidth :: Natural -> Width
 minUIntBitWidth = (+) 1
             . fromIntegral
             . (floor :: Double -> Int)
-            . logBase 2
+            . max 0 . logBase 2
             . fromIntegral
 
 minSIntBitWidth :: Int -> Width
