@@ -38,10 +38,10 @@ alg ctx (RefF ident) =
 
 alg _ (LitF l) = case l of
   UInt mwidth value ->
-    let minWidth = traceShow value $ minUIntBitWidth value
+    let minWidth = minUIntBitWidth value
         width = traceShow (minUIntBitWidth 0) $ traceShow minWidth $ fromMaybe minWidth mwidth
      in if minWidth > width
-           then Left $ NotEnoughWidth l minWidth 
+           then Left $ NotEnoughWidth l minWidth
            else Right $ case toSing width of
                         SomeSing sn ->
                           let s = STuple3 SUnsigned sn SMale
@@ -51,7 +51,7 @@ alg _ (LitF l) = case l of
     let minWidth = minSIntBitWidth value
         width = fromMaybe minWidth mwidth
      in if minWidth > width
-           then Left $ NotEnoughWidth l minWidth 
+           then Left $ NotEnoughWidth l minWidth
            else Right $ case toSing width of
                         SomeSing sn ->
                           let s = STuple3 SSigned sn SMale
@@ -72,11 +72,12 @@ alg _ (MuxF (Safe.MkSomeExpr sc ec) (Safe.MkSomeExpr sl el) (Safe.MkSomeExpr sr 
     _ -> Left $ NoTopModule "conditional signal"
 
 minUIntBitWidth :: Natural -> Width
-minUIntBitWidth = (+) 1
-            . fromIntegral
-            . (floor :: Double -> Int)
-            . logBase 2
-            . fromIntegral
+minUIntBitWidth x = traceShowId . (+) 1
+            . traceShowId . fromIntegral
+            . traceShowId . (floor :: Double -> Int)
+            . traceShowId . logBase 2
+            . traceShowId . fromIntegral
+            $ trace ("Starting with " <> show x) x
 
 minSIntBitWidth :: Int -> Width
 minSIntBitWidth x | x > 0 = 1 + minUIntBitWidth (fromIntegral x)
