@@ -39,7 +39,7 @@ alg ctx (RefF ident) =
 alg _ (LitF l) = case l of
   UInt mwidth value ->
     let minWidth = minUIntBitWidth value
-        width = traceShow (minUIntBitWidth 0) $ traceShow minWidth $ fromMaybe minWidth mwidth
+        width = fromMaybe minWidth mwidth
      in if minWidth > width
            then Left $ NotEnoughWidth l minWidth
            else Right $ case toSing width of
@@ -72,12 +72,11 @@ alg _ (MuxF (Safe.MkSomeExpr sc ec) (Safe.MkSomeExpr sl el) (Safe.MkSomeExpr sr 
     _ -> Left $ NoTopModule "conditional signal"
 
 minUIntBitWidth :: Natural -> Width
-minUIntBitWidth x = traceShowId . (+) 1
-            . traceShowId . fromIntegral
-            . traceShowId . (floor :: Double -> Int)
-            . traceShowId . logBase 2
-            . traceShowId . fromIntegral
-            $ trace ("Starting with " <> show x) x
+minUIntBitWidth = (+) 1
+            . fromIntegral
+            . (floor :: Double -> Int)
+            . max 0 . logBase 2
+            . fromIntegral
 
 minSIntBitWidth :: Int -> Width
 minSIntBitWidth x | x > 0 = 1 + minUIntBitWidth (fromIntegral x)
