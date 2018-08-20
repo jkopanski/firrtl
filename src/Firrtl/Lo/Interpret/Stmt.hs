@@ -13,8 +13,6 @@ import Firrtl.Lo.TypeCheck.Ty
 import Firrtl.Lo.Interpret.Eval
 import Firrtl.Lo.Interpret.Monad
 
-import Debug.Trace
-
 connectionTarget
   :: forall (t :: Ty) (s :: TyRtl) (w :: BW) (g :: Gender)
   .  ( IsValidLHS g ~ 'True

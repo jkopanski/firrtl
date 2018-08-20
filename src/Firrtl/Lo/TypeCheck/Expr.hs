@@ -17,8 +17,6 @@ import qualified Firrtl.Lo.Syntax.Safe as Safe
 import           Firrtl.Lo.TypeCheck.Monad
 import           Firrtl.Lo.TypeCheck.Ty
 
-import Debug.Trace
-
 instance Typed Expr where
   type TypeSafe Expr = Safe.SomeExpr
 
@@ -38,8 +36,8 @@ alg ctx (RefF ident) =
 
 alg _ (LitF l) = case l of
   UInt mwidth value ->
-    let minWidth = traceShow value $ minUIntBitWidth value
-        width = traceShow (minUIntBitWidth 0) $ traceShow minWidth $ fromMaybe minWidth mwidth
+    let minWidth = minUIntBitWidth value
+        width = fromMaybe minWidth mwidth
      in if minWidth > width
            then Left $ NotEnoughWidth l minWidth 
            else Right $ case toSing width of
@@ -72,11 +70,15 @@ alg _ (MuxF (Safe.MkSomeExpr sc ec) (Safe.MkSomeExpr sl el) (Safe.MkSomeExpr sr 
     _ -> Left $ NoTopModule "conditional signal"
 
 minUIntBitWidth :: Natural -> Width
-minUIntBitWidth = (+) 1
-            . fromIntegral
-            . (floor :: Double -> Int)
-            . logBase 2
-            . fromIntegral
+minUIntBitWidth n =
+  if n == 0
+     then 1
+     else f n
+  where f = (+) 1
+          . fromIntegral
+          . (floor :: Double -> Int)
+          . logBase 2
+          . fromIntegral
 
 minSIntBitWidth :: Int -> Width
 minSIntBitWidth x | x > 0 = 1 + minUIntBitWidth (fromIntegral x)
