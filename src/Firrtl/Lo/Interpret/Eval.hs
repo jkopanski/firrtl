@@ -5,6 +5,7 @@ import Prelude hiding (lookup)
 
 import           Firrtl.Lo.Interpret.Value
 import qualified Firrtl.Lo.Syntax.Safe.Expr as SE
+-- TODO: move Context to separate module
 import           Firrtl.Lo.TypeCheck.Monad
 import           Firrtl.Lo.TypeCheck.Ty
 

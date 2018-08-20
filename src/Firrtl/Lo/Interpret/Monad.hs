@@ -1,13 +1,15 @@
-module Firrtl.Lo.Interpret.Monad where
+module Firrtl.Lo.Interpret.Monad
+  ( Interpret (..)
+  -- re-exports
+  , MonadReader (..)
+  , MonadState (..)
+  ) where
 
 import           Control.Monad.Reader       (MonadReader (..))
-import           Control.Monad.State        (MonadState (..), modify)
-import           Control.Monad.Identity     (Identity (..))
-import           Control.Monad.Trans        (lift)
+import           Control.Monad.State        (MonadState (..))
 import           Control.Monad.Trans.Reader (ReaderT)
-import           Control.Monad.Trans.State  (StateT, State)
+import           Control.Monad.Trans.State  (State)
 
-import qualified Firrtl.Lo.Syntax.Safe  as Safe
 import           Firrtl.Lo.TypeCheck.Monad (Context)
 import           Firrtl.Lo.Interpret.Value
 
@@ -24,9 +26,3 @@ newtype Interpret a =
 
 deriving instance (EnvType Interpret ~ Context Value) => MonadReader Interpret
 deriving instance (StateType Interpret ~ Context Value) => MonadState Interpret
-
--- interpret
---   :: Context Int -- ^ module inputs
---   -> Safe.Module -- ^ module
---   -> Context Int -- ^ module outputs
--- interpret inputs m = undefined

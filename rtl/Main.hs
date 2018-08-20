@@ -7,7 +7,7 @@ import qualified Firrtl.Lo.Parser    as Parser
 import qualified Firrtl.Lo.Pretty    as Pretty
 import qualified Firrtl.Lo.Syntax    as Syntax
 import qualified Firrtl.Lo.TypeCheck as Check
-import qualified Firrtl.Lo.Interpret.Circuit as Interpret
+import qualified Firrtl.Lo.Interpret as Interpret
 import qualified Text.Megaparsec
 
 import Args (file, options)
