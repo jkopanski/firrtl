@@ -42,7 +42,6 @@ dependencies:
   - formatting
   - megaparsec
   - monads-tf
-  - natural-transformation
   - parsers
   - prettyprinter
   - prettyprinter-ansi-terminal
