@@ -18,3 +18,6 @@ cabal.sandbox.config
 *.hp
 .stack-work/
 flycheck_*
+
+# nix result
+result
