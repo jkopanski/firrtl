@@ -12,6 +12,7 @@ import Data.Singletons.Prelude hiding (Error)
 import Data.Width
 import Numeric.Natural         (Natural)
 
+import           Firrtl.Lo.Context
 import           Firrtl.Lo.Syntax.Expr
 import qualified Firrtl.Lo.Syntax.Safe as Safe
 import           Firrtl.Lo.TypeCheck.Monad

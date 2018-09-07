@@ -1,8 +1,9 @@
 { mkDerivation, base, formatting, hspec, hspec-megaparsec
-, megaparsec, monads-tf, optparse-applicative, parsers
-, prettyprinter, prettyprinter-ansi-terminal, recursion-schemes
-, singletons, stdenv, tasty, tasty-hspec, tasty-hunit, text
-, transformers, unordered-containers
+, megaparsec, monads-tf, natural-transformation
+, optparse-applicative, parsers, prettyprinter
+, prettyprinter-ansi-terminal, recursion-schemes, singletons
+, stdenv, tasty, tasty-hspec, tasty-hunit, text, transformers
+, unordered-containers
 }:
 mkDerivation {
   pname = "firrtl";
@@ -11,20 +12,21 @@ mkDerivation {
   isLibrary = true;
   isExecutable = true;
   libraryHaskellDepends = [
-    base formatting megaparsec monads-tf parsers prettyprinter
-    prettyprinter-ansi-terminal recursion-schemes singletons text
-    transformers unordered-containers
-  ];
-  executableHaskellDepends = [
-    base formatting megaparsec monads-tf optparse-applicative parsers
+    base formatting megaparsec monads-tf natural-transformation parsers
     prettyprinter prettyprinter-ansi-terminal recursion-schemes
     singletons text transformers unordered-containers
   ];
+  executableHaskellDepends = [
+    base formatting megaparsec monads-tf natural-transformation
+    optparse-applicative parsers prettyprinter
+    prettyprinter-ansi-terminal recursion-schemes singletons text
+    transformers unordered-containers
+  ];
   testHaskellDepends = [
-    base formatting hspec hspec-megaparsec megaparsec monads-tf parsers
-    prettyprinter prettyprinter-ansi-terminal recursion-schemes
-    singletons tasty tasty-hspec tasty-hunit text transformers
-    unordered-containers
+    base formatting hspec hspec-megaparsec megaparsec monads-tf
+    natural-transformation parsers prettyprinter
+    prettyprinter-ansi-terminal recursion-schemes singletons tasty
+    tasty-hspec tasty-hunit text transformers unordered-containers
   ];
   homepage = "https://github.com/jkopanski/firrtl#readme";
   description = "FIRRTL haskell implementation";

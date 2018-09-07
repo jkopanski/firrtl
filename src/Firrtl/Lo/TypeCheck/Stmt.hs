@@ -9,6 +9,7 @@ import Control.Monad.State  (modify)
 import Data.Singletons.Prelude
 import Data.Singletons.Decide
 
+import           Firrtl.Lo.Context
 import qualified Firrtl.Lo.Syntax.Safe  as Safe
 import           Firrtl.Lo.Syntax.Stmt
 import           Firrtl.Lo.TypeCheck.Expr  ()

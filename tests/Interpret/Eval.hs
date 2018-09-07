@@ -7,10 +7,10 @@ import Data.Width
 import Data.Singletons.Prelude
 import Numeric.Natural
 
+import           Firrtl.Lo.Context
 import qualified Firrtl.Lo.Syntax.Safe.Expr as SE
 import           Firrtl.Lo.Interpret.Eval
 import           Firrtl.Lo.Interpret.Value
-import           Firrtl.Lo.TypeCheck.Monad
 import           Firrtl.Lo.TypeCheck.Ty
 
 import Test.Tasty

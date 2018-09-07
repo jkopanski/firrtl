@@ -3,9 +3,9 @@ module Firrtl.Lo.Interpret.Eval where
 
 import Prelude hiding (lookup)
 
+import           Firrtl.Lo.Context
 import           Firrtl.Lo.Interpret.Value
 import qualified Firrtl.Lo.Syntax.Safe.Expr as SE
-import           Firrtl.Lo.TypeCheck.Monad
 import           Firrtl.Lo.TypeCheck.Ty
 
 eval :: forall (t :: Ty). Context Int -> SE.Expr t -> Maybe Value

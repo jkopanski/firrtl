@@ -5,10 +5,10 @@ import           Control.Monad.Reader
 import           Control.Monad.State
 import           Data.Width
 
+import Firrtl.Lo.Context
 import qualified Firrtl.Lo.Syntax.Safe.Expr as SE
 import Firrtl.Lo.Syntax.Common    (Id)
 import Firrtl.Lo.Syntax.Safe.Stmt
-import Firrtl.Lo.TypeCheck.Monad
 import Firrtl.Lo.TypeCheck.Ty
 import Firrtl.Lo.Interpret.Eval
 import Firrtl.Lo.Interpret.Monad

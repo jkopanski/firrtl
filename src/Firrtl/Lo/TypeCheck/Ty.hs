@@ -23,7 +23,6 @@ Type is a triple, cointaining:
 module Firrtl.Lo.TypeCheck.Ty where
 
 import Data.Singletons.TH
-import Data.Singletons.Prelude.Tuple
 import Data.Type.Bool
 import Data.Width
 

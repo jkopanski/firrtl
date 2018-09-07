@@ -7,8 +7,8 @@ module Firrtl.Lo.TypeCheck.Circuit where
 import Control.Monad.Except (throwError)
 import qualified Data.List.NonEmpty as NE
 import Data.Singletons.Prelude hiding (Error)
-import Data.Width
 
+import           Firrtl.Lo.Context
 import qualified Firrtl.Lo.Syntax.Safe as Safe
 import           Firrtl.Lo.Syntax.Circuit
 -- import           Firrtl.Lo.Syntax.Stmt

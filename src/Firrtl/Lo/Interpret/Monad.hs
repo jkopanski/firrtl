@@ -7,8 +7,8 @@ import           Control.Monad.Trans        (lift)
 import           Control.Monad.Trans.Reader (ReaderT)
 import           Control.Monad.Trans.State  (StateT, State)
 
+import           Firrtl.Lo.Context
 import qualified Firrtl.Lo.Syntax.Safe  as Safe
-import           Firrtl.Lo.TypeCheck.Monad (Context)
 import           Firrtl.Lo.Interpret.Value
 
 newtype Interpret a =
