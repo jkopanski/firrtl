@@ -3,6 +3,7 @@
 , prettyprinter, prettyprinter-ansi-terminal, recursion-schemes
 , singletons, stdenv, tasty, tasty-hspec, tasty-hunit, text
 , transformers, unordered-containers
+, hie, apply-refact, hsimport
 }:
 mkDerivation {
   pname = "firrtl";
@@ -26,6 +27,7 @@ mkDerivation {
     singletons tasty tasty-hspec tasty-hunit text transformers
     unordered-containers
   ];
+  buildTools = [ hie apply-refact hsimport ];
   homepage = "https://github.com/jkopanski/firrtl#readme";
   description = "FIRRTL haskell implementation";
   license = stdenv.lib.licenses.bsd3;

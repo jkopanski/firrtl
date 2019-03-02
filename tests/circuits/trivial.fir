@@ -1,4 +1,4 @@
-n1circuit Trivial :
+circuit Trivial :
   module Trivial :
     input clock: Clock
     input reset: UInt<1>
